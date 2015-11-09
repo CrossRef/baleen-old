@@ -15,7 +15,7 @@ public class Client {
 	}
 	
 	public void run() throws URISyntaxException, MalformedURLException {
-		SocketIO socket = new SocketIO("http://stream.wikimedia.org/rc");
+		final SocketIO socket = new SocketIO("http://stream.wikimedia.org/rc");
         socket.connect(
         	new IOCallback() {
             @Override
