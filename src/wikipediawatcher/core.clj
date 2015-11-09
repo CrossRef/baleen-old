@@ -77,4 +77,5 @@
   [& args]
   (let [client (new Client callback)]
     (reset! s (http-server/run-server #'server/app {:port (:port config)}))
-    (.run client)))
+    ; (.run client)
+    ))

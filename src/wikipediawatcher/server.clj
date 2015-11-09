@@ -1,5 +1,6 @@
 (ns wikipediawatcher.server
-  (:require [wikipediawatcher.state :as state])
+  (:require [wikipediawatcher.state :as state]
+            [wikipediawatcher.database :as db])
   (:require [clj-time.core :as t]
             [clj-time.coerce :as coerce]
             [clj-time.format :as f])
@@ -59,10 +60,26 @@
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
                                    :num-workers state/num-workers})))
 
+(defresource events
+  []
+  :available-media-types ["application/json"]
+  :handle-ok (fn [ctx]
+    (let [start-id (when-let [id (get-in ctx [:request :params :start])] (Integer/parseInt id))
+          events (db/get-events-page start-id)
+          events (map (fn [event] (assoc event :date (str (:date event))
+                                               :wiki (:server event))
+
+            ) events)
+          next-offset (-> events last :id)]
+
+      (json/write-str {:events events
+                       :next-offset next-offset}))))
+
 (defroutes app-routes
   (GET "/" [] (home))
   (GET "/status" [] (status))
   (GET ["/socket/events"] [] event-websocket)
+  (GET ["/events"] [] (events))
   (route/resources "/"))
 
 (def app

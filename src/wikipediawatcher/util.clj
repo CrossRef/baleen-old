@@ -26,6 +26,9 @@
       (when likely-doi url-path)))
 
     (catch MalformedURLException e
+      )
+
+    (catch IllegalArgumentException e
       (locking *out* (prn "MALFORMED" (str e)))))))
 
 (defn extract-dois-from-html [input]

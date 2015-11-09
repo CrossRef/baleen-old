@@ -7,6 +7,7 @@
   (:require [clj-time.coerce :as coerce]
             [clj-time.core :as clj-time]))
 
+(def page-size 20)
 
 (kdb/defdb db (kdb/mysql
   {:db (:db-name config)
@@ -18,15 +19,25 @@
 
 
 (k/defentity event
-  (k/fields :old-id
+  (k/fields :id
+            :old-id
             :new-id
             :doi
-            :inserted
+            :date
             :server
             :title
             :url
-            :action))
+            :action)
+  (k/prepare (fn [item] (assoc item :date (coerce/to-sql-date (:date item)))))
+  (k/transform (fn [item] (assoc item :date (coerce/from-sql-date (:date item)))))
+
+  )
 
 (defn insert [action old-id new-id doi server title url date]
-  (k/insert event (k/values {:action action :old-id old-id :new-id new-id :doi doi :inserted (coerce/to-sql-date date) :server server :title title :url url})))
+  (k/insert event (k/values {:action action :old-id old-id :new-id new-id :doi doi :date date :server server :title title :url url})))
 
+(defn get-events-page [from-id]
+
+  (if from-id
+    (k/select event (k/where (< :id from-id)) (k/order :id :DESC) (k/limit page-size))
+    (k/select event (k/order :id :DESC) (k/limit page-size))))

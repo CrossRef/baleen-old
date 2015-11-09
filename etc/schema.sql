@@ -3,7 +3,7 @@ CREATE TABLE event (
   new_id INTEGER NOT NULL,
   old_id INTEGER NULL,
   doi VARCHAR(1024),
-  inserted DATETIME NOT NULL,
+  date DATETIME NOT NULL,
   server VARCHAR(1024),
   title VARCHAR(1024),
   url VARCHAR(1024),

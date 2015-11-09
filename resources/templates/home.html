@@ -60,22 +60,23 @@
             },
 
             // fetch numbered page or the first page
-            fetchPage: function(pageId) {
+            fetchPage: function(offset) {
 
                 q = "";
-                if (pageId) {
-                    q = "?offset-id=" + pageId;
+                if (offset) {
+                    q = "?start=" + offset;
                 }
 
                 var self = this;
 
                 // When we request a page, replace the entire events list.
-                $.get(window.location.toString() + "/page" + q).success(function(response) {
+                $.get("/events" + q).success(function(response) {
                     var items = response.events;
 
                     for (var i = 0; i < items.length; i++) {
                         items[i].key = counter();
                     }
+
 
                     self.setState({items: items});
 
@@ -94,10 +95,10 @@
                 this.fetchPage(null);
             },
 
-            navigatePage: function(pageId) {
+            navigatePage: function(offset) {
                 // liveSincePage is set every time a live event comes in.
                 this.setState({liveState: 'page', liveSincePage: false});
-                this.fetchPage(pageId);
+                this.fetchPage(offset);
             },
 
             attemptConnect: function () {
