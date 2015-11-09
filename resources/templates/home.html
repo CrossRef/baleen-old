@@ -1,0 +1,608 @@
+{% extends "templates/base.html" %}
+
+{% block "content" %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+    
+        <h1>DOIs in Wikipedia</h1>
+        <link href='/lib/font-awesome/css/font-awesome.min.css' media='screen' rel='stylesheet' type='text/css' />
+        <script src="/lib/react/react.js"></script>
+        <script src="/lib/react/JSXTransformer.js"></script>
+        <script src="/lib/moment/moment.js"></script>
+
+        <script type="text/jsx">
+        window.counter = (function() {
+            var count = 0;
+
+            return function() {
+                count ++;
+                return count;
+            }})();
+
+        var Entry = React.createClass({
+            render: function() {
+                var item = this.props.item;
+
+                var wikiSubdomain = item.wiki.split(".")[0];
+                var wikiName = window.wikis[wikiSubdomain] || item.wiki;
+
+                return (<tr>
+                        <td><div><small>{wikiName} Wikipedia Article</small></div>
+                            <div className="itemTitle"><i className='fa-external-link'></i><a href={item.url}>{item.title}</a></div>
+                            <a href={item.url}><i className="fa fa-external-link"></i>&nbsp;{item.wiki}/wiki/{item.title}</a>
+                        </td>
+                        <td className="citeAction"><strong>{item.action == 'add' ? "cited" : "uncited"}</strong> <br />
+                        {moment(item.date).calendar()}
+                        </td>
+                        <td>
+                        <div><small>{item.fromApi && item.fromApi.type}</small></div>
+                        <div className="itemTitle"><a href={"http://doi.org/" + item.doi}>{item.fromApi && item.fromApi.title}</a></div>
+                        <div>{item.fromApi && item.fromApi.containerTitle}</div>
+                        <div>Authors: {item.fromApi &&  item.fromApi.authors}</div>
+                        <div><a href={"http://doi.org/" + item.doi}><i className="fa fa-external-link"></i>&nbsp;{item.doi}</a></div>
+                        </td>
+                    </tr>);
+            }
+        });
+
+        var StreamTable = React.createClass({
+            getInitialState: function () {
+                return {items: [],
+                    connectionAttempts: 0,
+                    liveState: 'live'};
+            },
+
+            componentDidMount: function () {
+                this.attemptConnect();
+
+                this.fetchPage(null);
+            },
+
+            // fetch numbered page or the first page
+            fetchPage: function(pageId) {
+
+                q = "";
+                if (pageId) {
+                    q = "?offset-id=" + pageId;
+                }
+
+                var self = this;
+
+                // When we request a page, replace the entire events list.
+                $.get(window.location.toString() + "/page" + q).success(function(response) {
+                    var items = response.events;
+
+                    for (var i = 0; i < items.length; i++) {
+                        items[i].key = counter();
+                    }
+
+                    self.setState({items: items});
+
+                    for (var i = 0; i < items.length; i++) {
+                        self.checkDoi(items[i].doi, items[i].key);
+                    }
+
+                    window.scrollTo(0,0);
+                });
+
+            },
+
+            // Start viewing live stream.
+            navigateLive: function() {
+                this.setState({liveState: 'live'});
+                this.fetchPage(null);
+            },
+
+            navigatePage: function(pageId) {
+                // liveSincePage is set every time a live event comes in.
+                this.setState({liveState: 'page', liveSincePage: false});
+                this.fetchPage(pageId);
+            },
+
+            attemptConnect: function () {
+                var self = this;
+
+                this.setState({
+                    connectionAttempts: this.state.connectionAttempts + 1,
+                    error: false,
+                    // Can be 'live' or 'page'.
+                    liveState: 'live'
+                });
+
+                var port = ":" + (window.location.port || "80");
+                var socketUrl =  "ws://" + window.location.hostname + port + "/socket/events" ;
+                
+                socket = new WebSocket(socketUrl);
+
+                socket.onmessage = function(item) {
+                    // If we're viewing a page, don't add new events to list.
+                    if (self.state.liveState === 'page') {
+                        self.setState({eventsSincePage: true});
+                        return
+                    }
+
+                    var count = counter();
+
+                    var data = JSON.parse(item.data);
+
+                    // Set unique key for event (react needs this).
+                    data.key = count;
+                    var items = self.state.items;
+                    items.unshift(data);
+
+                    // Limit to 50.
+                    items = items.slice(0, 20);
+
+                    self.setState({items: items});
+   
+                    self.checkDoi(data.doi, data.key);
+                };
+
+                socket.onerror = function() {
+                    self.setState({error: true});
+                    setTimeout(function(){self.attemptConnect()}, 2000);
+                }
+            },
+
+            checkDoi: function(doi, key) {
+                var self = this;
+
+                // Only add if the API says it's OK.
+                $.get("http://api.crossref.org/v1/works/" + doi).
+                success(function(response) {
+                    var items = self.state.items;
+                    var index = null;
+
+                    for (i = 0; i < items.length; i++) {
+                        if (items[i].key == key) {
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    var title = response && response.message && response.message.title[0];
+                    var typeLabel = response && response.message && response.message.type;
+                    var type = itemTypes[typeLabel] || "";
+                    var containerTitle = response && response.message && response.message['container-title'][0] || "";
+                    var authors = response && response.message && response.message.author;
+                    var formattedAuthors = authors.map(function(author) { return author.family + ", " + author.given[0]}).join(", ");
+
+                    if (index !== null) {
+                        items[i].fromApi = {title: title, type: type, containerTitle: containerTitle, authors: formattedAuthors};
+                    }
+
+                    self.setState({items: items});
+
+                }).fail(function(response) {
+                    console.log("DOI was not recognised:", doi);
+
+                    var items = self.state.items;
+                    var index = null;
+
+                    for (i = 0; i < items.length; i++) {
+                        if (items[i].key == key) {
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    items = items.slice(0,index).concat(items.slice(index+1));
+                    self.setState({items: items});
+                });
+            },
+
+            render: function() {
+                if (this.state.error) {
+                    return <p className="error">Sorry there was an error connecting to the server. Please refresh the page or email labs@crossref.org if you are having continued problems. Number of attempts to connect: {this.state.connectionAttempts}.</p>
+                }
+
+                var lastItem = this.state.items[this.state.items.length -1];
+                var lastId = lastItem && lastItem.id;
+
+                // Group these per day.
+                var allDaysWorth = [];
+                var currentDaysWorth = [];
+                var currentLabel = null;
+                if (this.state.items) {
+                    this.state.items.forEach(function(item) {
+                        var itemDate = new Date(item.date);
+                        var label = moment(itemDate).format('LL');
+
+                        // First time round it's null.
+                        currentLabel =  currentLabel || label;
+
+                        if (label == currentLabel) {
+                            currentDaysWorth.push(item);
+                        } else {
+                            allDaysWorth.push([currentLabel, currentDaysWorth]);
+                            currentDaysWorth = [item];
+                        }
+
+                        currentLabel = label;
+
+                    });
+
+                    allDaysWorth.push([currentLabel, currentDaysWorth]);    
+                }
+
+                
+                return <div>
+                {(this.state.liveState === 'page' && this.state.eventsSincePage) ?
+                    <p className="alert alert-info">There are new new events. <button className='btn' onClick={this.navigateLive}>View to live stream</button></p> : <span></span>}
+
+
+                    {allDaysWorth.map(function(daysWorth) {
+                    var dayLabel = daysWorth[0];
+                    var items = daysWorth[1];
+
+                    return  <div key={dayLabel}>
+
+                        <h3>{dayLabel}</h3>
+                        <table className="table table-striped event-table">
+                         <thead>
+                           <tr>
+                             <th>from</th>
+                             <th></th>
+                             <th>to</th>
+                           </tr>
+                          </thead>
+                          <tbody>
+                            {items.map(function(item) {
+                                return <Entry item={item} key={item.key} />
+                            })}
+                          </tbody>
+                        </table></div>})}
+
+                    {this.state.liveState === 'page' ? <button className='btn' onClick={this.navigateLive}>Back to live stream</button> : <span></span> }
+                    <button onClick={this.navigatePage.bind(null, lastId)} className='btn btn-primary'>Older...</button>
+
+                </div>
+            }});
+
+        React.render(
+            <StreamTable />,
+            document.getElementById('content')
+        );
+
+        // from https://github.com/CrossRef/cayenne/blob/master/src/cayenne/item_tree.clj#L9
+        window.itemTypes = {
+            "journal":  "Journal",
+            "article":  "Article",
+            "journal-article":  "Journal Article",
+            "journal-issue":  "Journal Issue",
+            "journal-volume":  "Journal Volume",
+            "proceedings":  "Proceedings",
+            "proceedings-series":  "Proceedings Series",
+            "proceedings-article":  "Conference Paper",
+            "report":  "Report",
+            "report-series":  "Report Series",
+            "standard":  "Standard",
+            "standard-series":  "Standard Series",
+            "dataset":  "Dataset",
+            "edited-book":  "Book",
+            "monograph":  "Monograph",
+            "reference-book":  "Reference",
+            "book":  "Book",
+            "book-series":  "Book Series",
+            "book-set":  "Book Set",
+            "chapter":  "Chapter",
+            "section":  "Section",
+            "part":  "Part",
+            "track":  "Track",
+            "reference-entry":  "Entry",
+            "dissertation":  "Dissertation",
+            "component":  "Component",
+            "image":  "Image",
+            "model":  "Model",
+            "film":  "Film",
+            "other":  "Other"};
+
+        // From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
+        window.wikis = {
+            'en': 'English',
+            'sv': 'Swedish',
+            'nl': 'Dutch',
+            'de': 'German',
+            'fr': 'French',
+            'war': 'Waray-Waray',
+            'ru': 'Russian',
+            'ceb': 'Cebuano',
+            'it': 'Italian',
+            'es': 'Spanish',
+            'vi': 'Vietnamese',
+            'pl': 'Polish',
+            'ja': 'Japanese',
+            'pt': 'Portuguese',
+            'zh': 'Chinese',
+            'uk': 'Ukrainian',
+            'ca': 'Catalan',
+            'fa': 'Persian',
+            'no': 'Norwegian (Bokmål)',
+            'sh': 'Serbo-Croatian',
+            'fi': 'Finnish',
+            'ar': 'Arabic',
+            'id': 'Indonesian',
+            'cs': 'Czech',
+            'sr': 'Serbian',
+            'ro': 'Romanian',
+            'ko': 'Korean',
+            'hu': 'Hungarian',
+            'ms': 'Malay',
+            'tr': 'Turkish',
+            'min': 'Minangkabau',
+            'eo': 'Esperanto',
+            'kk': 'Kazakh',
+            'eu': 'Basque',
+            'sk': 'Slovak',
+            'da': 'Danish',
+            'bg': 'Bulgarian',
+            'he': 'Hebrew',
+            'lt': 'Lithuanian',
+            'hy': 'Armenian',
+            'hr': 'Croatian',
+            'sl': 'Slovenian',
+            'et': 'Estonian',
+            'uz': 'Uzbek',
+            'gl': 'Galician',
+            'nn': 'Norwegian (Nynorsk)',
+            'vo': 'Volapük',
+            'la': 'Latin',
+            'simple': 'Simple English',
+            'el': 'Greek',
+            'hi': 'Hindi',
+            'az': 'Azerbaijani',
+            'th': 'Thai',
+            'ka': 'Georgian',
+            'ce': 'Chechen',
+            'oc': 'Occitan',
+            'be': 'Belarusian',
+            'mk': 'Macedonian',
+            'mg': 'Malagasy',
+            'new': 'Newar / Nepal Bhasa',
+            'ur': 'Urdu',
+            'tt': 'Tatar',
+            'ta': 'Tamil',
+            'pms': 'Piedmontese',
+            'cy': 'Welsh',
+            'tl': 'Tagalog',
+            'lv': 'Latvian',
+            'bs': 'Bosnian',
+            'te': 'Telugu',
+            'be-x-old': 'Belarusian (Taraškievica)',
+            'br': 'Breton',
+            'ht': 'Haitian',
+            'sq': 'Albanian',
+            'jv': 'Javanese',
+            'lb': 'Luxembourgish',
+            'mr': 'Marathi',
+            'is': 'Icelandic',
+            'ml': 'Malayalam',
+            'zh-yue': 'Cantonese',
+            'bn': 'Bengali',
+            'af': 'Afrikaans',
+            'ba': 'Bashkir',
+            'ga': 'Irish',
+            'pnb': 'Western Panjabi',
+            'cv': 'Chuvash',
+            'fy': 'West Frisian',
+            'lmo': 'Lombard',
+            'tg': 'Tajik',
+            'sco': 'Scots',
+            'my': 'Burmese',
+            'yo': 'Yoruba',
+            'an': 'Aragonese',
+            'ky': 'Kirghiz',
+            'sw': 'Swahili',
+            'io': 'Ido',
+            'ne': 'Nepali',
+            'gu': 'Gujarati',
+            'scn': 'Sicilian',
+            'bpy': 'Bishnupriya Manipuri',
+            'nds': 'Low Saxon',
+            'ku': 'Kurdish',
+            'ast': 'Asturian',
+            'qu': 'Quechua',
+            'als': 'Alemannic',
+            'su': 'Sundanese',
+            'pa': 'Punjabi',
+            'kn': 'Kannada',
+            'ckb': 'Sorani',
+            'ia': 'Interlingua',
+            'mn': 'Mongolian',
+            'nap': 'Neapolitan',
+            'bug': 'Buginese',
+            'arz': 'Egyptian Arabic',
+            'bat-smg': 'Samogitian',
+            'wa': 'Walloon',
+            'zh-min-nan': 'Min Nan',
+            'am': 'Amharic',
+            'map-bms': 'Banyumasan',
+            'gd': 'Scottish Gaelic',
+            'yi': 'Yiddish',
+            'mzn': 'Mazandarani',
+            'si': 'Sinhalese',
+            'fo': 'Faroese',
+            'bar': 'Bavarian',
+            'vec': 'Venetian',
+            'nah': 'Nahuatl',
+            'sah': 'Sakha',
+            'os': 'Ossetian',
+            'sa': 'Sanskrit',
+            'roa-tara': 'Tarantino',
+            'li': 'Limburgish',
+            'hsb': 'Upper Sorbian',
+            'or': 'Oriya',
+            'pam': 'Kapampangan',
+            'mrj': 'Hill Mari',
+            'mhr': 'Meadow Mari',
+            'se': 'Northern Sami',
+            'mi': 'Maori',
+            'ilo': 'Ilokano',
+            'hif': 'Fiji Hindi',
+            'bcl': 'Central Bicolano',
+            'gan': 'Gan',
+            'rue': 'Rusyn',
+            'ps': 'Pashto',
+            'glk': 'Gilaki',
+            'nds-nl': 'Dutch Low Saxon',
+            'bo': 'Tibetan',
+            'vls': 'West Flemish',
+            'diq': 'Zazaki',
+            'fiu-vro': 'Võro',
+            'xmf': 'Mingrelian',
+            'tk': 'Turkmen',
+            'gv': 'Manx',
+            'sc': 'Sardinian',
+            'co': 'Corsican',
+            'csb': 'Kashubian',
+            'hak': 'Hakka',
+            'km': 'Khmer',
+            'kv': 'Komi',
+            'vep': 'Vepsian',
+            'zea': 'Zeelandic',
+            'crh': 'Crimean Tatar',
+            'zh-classical': 'Classical Chinese',
+            'frr': 'North Frisian',
+            'eml': 'Emilian-Romagnol',
+            'ay': 'Aymara',
+            'stq': 'Saterland Frisian',
+            'udm': 'Udmurt',
+            'wuu': 'Wu',
+            'nrm': 'Norman',
+            'kw': 'Cornish',
+            'rm': 'Romansh',
+            'szl': 'Silesian',
+            'so': 'Somali',
+            'koi': 'Komi-Permyak',
+            'as': 'Assamese',
+            'lad': 'Ladino',
+            'mt': 'Maltese',
+            'fur': 'Friulian',
+            'dv': 'Divehi',
+            'gn': 'Guarani',
+            'dsb': 'Lower Sorbian',
+            'pcd': 'Picard',
+            'ie': 'Interlingue',
+            'sd': 'Sindhi',
+            'lij': 'Ligurian',
+            'cbk-zam': 'Zamboanga Chavacano',
+            'cdo': 'Min Dong',
+            'ksh': 'Ripuarian',
+            'ext': 'Extremaduran',
+            'mwl': 'Mirandese',
+            'gag': 'Gagauz',
+            'ang': 'Anglo-Saxon',
+            'ace': 'Acehnese',
+            'ug': 'Uyghur',
+            'pi': 'Pali',
+            'pag': 'Pangasinan',
+            'nv': 'Navajo',
+            'frp': 'Franco-Provençal/Arpitan',
+            'lez': 'Lezgian',
+            'sn': 'Shona',
+            'kab': 'Kabyle',
+            'ln': 'Lingala',
+            'pfl': 'Palatinate German',
+            'myv': 'Erzya',
+            'xal': 'Kalmyk',
+            'krc': 'Karachay-Balkar',
+            'haw': 'Hawaiian',
+            'rw': 'Kinyarwanda',
+            'pdc': 'Pennsylvania German',
+            'kaa': 'Karakalpak',
+            'to': 'Tongan',
+            'kl': 'Greenlandic',
+            'arc': 'Aramaic',
+            'nov': 'Novial',
+            'kbd': 'Kabardian Circassian',
+            'av': 'Avar',
+            'bxr': 'Buryat (Russia)',
+            'lo': 'Lao',
+            'bjn': 'Banjar',
+            'ha': 'Hausa',
+            'tet': 'Tetum',
+            'tpi': 'Tok Pisin',
+            'na': 'Nauruan',
+            'pap': 'Papiamentu',
+            'lbe': 'Lak',
+            'jbo': 'Lojban',
+            'ty': 'Tahitian',
+            'mdf': 'Moksha',
+            'roa-rup': 'Aromanian',
+            'wo': 'Wolof',
+            'tyv': 'Tuvan',
+            'ig': 'Igbo',
+            'srn': 'Sranan',
+            'nso': 'Northern Sotho',
+            'kg': 'Kongo',
+            'ab': 'Abkhazian',
+            'ltg': 'Latgalian',
+            'zu': 'Zulu',
+            'om': 'Oromo',
+            'chy': 'Cheyenne',
+            'za': 'Zhuang',
+            'cu': 'Old Church Slavonic',
+            'rmy': 'Romani',
+            'tw': 'Twi',
+            'tn': 'Tswana',
+            'chr': 'Cherokee',
+            'pih': 'Norfolk',
+            'mai': 'Maithili',
+            'got': 'Gothic',
+            'bi': 'Bislama',
+            'xh': 'Xhosa',
+            'sm': 'Samoan',
+            'ss': 'Swati',
+            'mo': 'Moldovan',
+            'rn': 'Kirundi',
+            'ki': 'Kikuyu',
+            'pnt': 'Pontic',
+            'bm': 'Bambara',
+            'iu': 'Inuktitut',
+            'ee': 'Ewe',
+            'lg': 'Luganda',
+            'ts': 'Tsonga',
+            'fj': 'Fijian',
+            'ak': 'Akan',
+            'ik': 'Inupiak',
+            'st': 'Sesotho',
+            'sg': 'Sango',
+            'ff': 'Fula',
+            'dz': 'Dzongkha',
+            'ny': 'Chichewa',
+            'ch': 'Chamorro',
+            'ti': 'Tigrinya',
+            've': 'Venda',
+            'ks': 'Kashmiri',
+            'tum': 'Tumbuka',
+            'cr': 'Cree',
+            'ng': 'Ndonga',
+            'cho': 'Choctaw',
+            'kj': 'Kuanyama',
+            'mh': 'Marshallese',
+            'ho': 'Hiri Motu',
+            'ii': 'Sichuan Yi',
+            'aa': 'Afar',
+            'mus': 'Muscogee',
+            'hz': 'Herero',
+            'kr': 'Kanuri'};
+
+        </script>
+
+
+        <div class='container' id='content'>
+        <p class="strong">If you are having problems viewing this page please email labs@crossref.org . This page requires JavaScript and a modern browser to work.</p>
+        </div>
+
+    
+    </div>
+</div>  
+
+<script>
+
+</script>
+
+{% endblock %}
+
+
