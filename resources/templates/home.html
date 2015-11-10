@@ -169,7 +169,7 @@
                     var authors = response && response.message && response.message.author;
                     var formattedAuthors = authors && authors.map(function(author) {
                         var name = author.family;
-                        if (author.given.length > 0) {
+                        if (author.given && author.given.length > 0) {
                             name = name + ", " + author.given[0];
                         }
                         return name}).join(", ");

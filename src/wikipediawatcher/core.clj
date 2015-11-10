@@ -42,23 +42,23 @@
         [added-dois removed-dois now-dois] (util/doi-changes (:body @old-content) (:body @new-content))]
 
         (when (or (not-empty added-dois) (not-empty removed-dois))
-          (state/inc-citation-bucket)
           (reset! state/most-recent-citation (clj-time/now)))
 
         ; Broadcast this to all listeners.
         (doseq [doi added-dois]
           (let [broadcast-data (json/write-str {:doi doi :url page-url :action "add" :wiki server-name :title title :date (str date)})]
           (doseq [c @state/broadcast-channels]
+            (state/inc-citation-bucket)
             (http-server/send! c broadcast-data))))
 
         (doseq [doi removed-dois]
           (let [broadcast-data (json/write-str {:doi doi :url page-url :action "remove" :wiki server-name :title title :date (str date)})]
           (doseq [c @state/broadcast-channels]
+            (state/inc-citation-bucket)
             (http-server/send! c broadcast-data))))
 
         (doseq [doi added-dois]
           (db/insert "add" old-revision new-revision doi server-name title page-url date))
-        
 
         (doseq [doi removed-dois]
           (db/insert "remove" old-revision new-revision doi server-name title page-url date))))))
