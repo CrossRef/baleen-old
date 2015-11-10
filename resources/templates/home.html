@@ -328,7 +328,7 @@
                             {numCitations} <strong>DOI citations</strong> in the last <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
                             {citationHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "505050", "display": "inline", "position": "absolute", "bottom": "0px"};
+                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "505050", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
                                 if (i == 0) {
                                     style.backgroundColor = "#a0a0a0";
                                 }
