@@ -46,15 +46,15 @@
 
         ; Broadcast this to all listeners.
         (doseq [doi added-dois]
+          (state/inc-citation-bucket)
           (let [broadcast-data (json/write-str {:doi doi :url page-url :action "add" :wiki server-name :title title :date (str date)})]
           (doseq [c @state/broadcast-channels]
-            (state/inc-citation-bucket)
             (http-server/send! c broadcast-data))))
 
         (doseq [doi removed-dois]
+          (state/inc-citation-bucket)
           (let [broadcast-data (json/write-str {:doi doi :url page-url :action "remove" :wiki server-name :title title :date (str date)})]
           (doseq [c @state/broadcast-channels]
-            (state/inc-citation-bucket)
             (http-server/send! c broadcast-data))))
 
         (doseq [doi added-dois]
