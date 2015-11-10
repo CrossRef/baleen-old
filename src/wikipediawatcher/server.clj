@@ -19,9 +19,10 @@
             [crossref.util.config :refer [config]])
   (:require [clojure.walk :refer [prewalk]])
   (:require [clojure.core.async :as async :refer [<! <!! >!! >! go chan]])
-  (:require [org.httpkit.server :refer [with-channel on-close on-receive send! run-server]])
-)
+  (:require [org.httpkit.server :refer [with-channel on-close on-receive send! run-server]]))
 
+
+(selmer.parser/cache-off!)
             
 ; Just serve up a blank page with JavaScript to pick up from event-types-socket.
 (defresource home
@@ -59,8 +60,8 @@
                                    :most-recent-event (when-let [x @state/most-recent-event] (str x))
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
                                    :num-workers state/num-workers
-                                   :event-history (drop 1 @state/event-buckets)
-                                   :citation-history (drop 1 @state/citation-buckets)
+                                   :event-history @state/event-buckets
+                                   :citation-history @state/citation-buckets
                                    :recent-events (> (apply + (take 10 @state/event-buckets)) 0)
                                    })))
 

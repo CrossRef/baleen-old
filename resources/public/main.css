@@ -369,3 +369,11 @@ body {
 .event-table td {
   max-width: 30em;
 }
+
+.navbar-header {
+  height: 100px;
+}
+
+body {
+  padding-top: 120px;
+}

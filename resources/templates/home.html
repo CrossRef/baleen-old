@@ -5,7 +5,6 @@
     <div class="row">
         <div class="col-md-12">
     
-        <h1>DOIs in Wikipedia</h1>
         <link href='/lib/font-awesome/css/font-awesome.min.css' media='screen' rel='stylesheet' type='text/css' />
         <script src="/lib/react/react.js"></script>
         <script src="/lib/react/JSXTransformer.js"></script>
@@ -168,7 +167,12 @@
                     var type = itemTypes[typeLabel] || "";
                     var containerTitle = response && response.message && response.message['container-title'][0] || "";
                     var authors = response && response.message && response.message.author;
-                    var formattedAuthors = authors && authors.map(function(author) { return author.family + ", " + author.given[0]}).join(", ");
+                    var formattedAuthors = authors && authors.map(function(author) {
+                        var name = author.family;
+                        if (author.given.length > 0) {
+                            name = name + ", " + author.given[0];
+                        }
+                        return name}).join(", ");
 
                     if (index !== null) {
                         items[i].fromApi = {title: title, type: type, containerTitle: containerTitle, authors: formattedAuthors};
@@ -285,30 +289,34 @@
 
                 var eventHistory = this.state.status['event-history'];
                 var eventMultiplier = maxValue / (Math.max.apply(null, eventHistory) || 1);
-                eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
                 var numEdits = 0;
                 if (eventHistory.length > 0) {
                     numEdits = eventHistory[0];
                 }
 
+                eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
 
                 var citationHistory = this.state.status['citation-history'];
                 var citationMultiplier = maxValue / (Math.max.apply(null, citationHistory) || 1);
-                citationHistory = citationHistory.map(function(x) { return Math.ceil(x * citationMultiplier)});
                 var numCitations = 0;
 
                 if (citationHistory.length > 0) {
                     numCitations = citationHistory[0];
                 }
 
+                citationHistory = citationHistory.map(function(x) { return Math.ceil(x * citationMultiplier)});
+
+
                 var containerStyle = {"height": "100px", "width": "100%", "overflow": "hidden", "position": "relative"};
                 return <div className='row'>
                         <div className='col-md-6'>
-                            <div>{numEdits} Wikipedia edits in last 5 seconds</div>
+                            <div>{numEdits} <strong>Wikipedia edits</strong> in last <strong>5 seconds</strong></div>
                             <div style={containerStyle}>
                             {eventHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#a0a0a0", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
-
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#505050", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
+                                if (i == 0) {
+                                    style.backgroundColor = "#a0a0a0";
+                                }
                                 return <div style={style} key={i}>
                                           
                                         </div>
@@ -317,12 +325,13 @@
                             
                         </div>
                         <div className='col-md-6'>
-                            {numCitations} DOI citations in the last 5 minutes<br />
+                            {numCitations} <strong>DOI citations</strong> in the last <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
                             {citationHistory.map(function(c, i) {
-                                var outerStyle = {"width": "10px", "display": "inline", "padding": "2px", "height": "100px"};
-                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "black", "display": "inline", "position": "absolute", "bottom": "0px"};
-
+                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "505050", "display": "inline", "position": "absolute", "bottom": "0px"};
+                                if (i == 0) {
+                                    style.backgroundColor = "#a0a0a0";
+                                }
                                 return <div style={style} key={i}>
                                         </div>
                             })} 
