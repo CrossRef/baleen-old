@@ -25,10 +25,11 @@
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/java.jdbc "0.3.6"]
                  [ring "1.3.2"]
-                 ]
+                 [overtone/at-at "1.2.0"]]
                  
   :plugins [[lein-localrepo "0.5.3"]]
   :java-source-paths ["src-java"]
   :main ^:skip-aot wikipediawatcher.core
   :target-path "target/%s"
+  :jvm-opts ["-Duser.timezone=UTC"]
   :profiles {:uberjar {:aot :all}})

@@ -41,6 +41,7 @@ public class Client {
             public void onConnect() {
                 System.out.println("Connection established");
                 socket.emit("subscribe", "*");
+                // socket.emit("subscribe", "en.wikipedia.org");
             }
 
             @Override

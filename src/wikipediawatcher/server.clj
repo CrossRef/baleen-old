@@ -58,7 +58,11 @@
                                    :subscribers (count @state/broadcast-channels)
                                    :most-recent-event (when-let [x @state/most-recent-event] (str x))
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
-                                   :num-workers state/num-workers})))
+                                   :num-workers state/num-workers
+                                   :event-history (drop 1 @state/event-buckets)
+                                   :citation-history (drop 1 @state/citation-buckets)
+                                   :recent-events (> (apply + (take 10 @state/event-buckets)) 0)
+                                   })))
 
 (defresource events
   []

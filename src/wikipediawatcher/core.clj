@@ -30,6 +30,7 @@
         page-url (str "https://" server-name "/w/index.php?title=" (URLEncoder/encode title "UTF-8"))]
 
         (reset! state/most-recent-event (clj-time/now))
+        (state/inc-event-bucket)
 
     ; This may not be a revision of a page. Ignore if there isn't revision information.
     (when (and server-url title old-revision new-revision)
@@ -41,6 +42,7 @@
         [added-dois removed-dois now-dois] (util/doi-changes (:body @old-content) (:body @new-content))]
 
         (when (or (not-empty added-dois) (not-empty removed-dois))
+          (state/inc-citation-bucket)
           (reset! state/most-recent-citation (clj-time/now)))
 
         ; Broadcast this to all listeners.

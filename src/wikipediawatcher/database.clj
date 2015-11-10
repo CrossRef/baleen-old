@@ -28,10 +28,8 @@
             :title
             :url
             :action)
-  (k/prepare (fn [item] (assoc item :date (coerce/to-sql-date (:date item)))))
-  (k/transform (fn [item] (assoc item :date (coerce/from-sql-date (:date item)))))
-
-  )
+  (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
+  (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
 
 (defn insert [action old-id new-id doi server title url date]
   (k/insert event (k/values {:action action :old-id old-id :new-id new-id :doi doi :date date :server server :title title :url url})))

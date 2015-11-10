@@ -10,6 +10,7 @@
         <script src="/lib/react/react.js"></script>
         <script src="/lib/react/JSXTransformer.js"></script>
         <script src="/lib/moment/moment.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 
         <script type="text/jsx">
         window.counter = (function() {
@@ -167,7 +168,7 @@
                     var type = itemTypes[typeLabel] || "";
                     var containerTitle = response && response.message && response.message['container-title'][0] || "";
                     var authors = response && response.message && response.message.author;
-                    var formattedAuthors = authors.map(function(author) { return author.family + ", " + author.given[0]}).join(", ");
+                    var formattedAuthors = authors && authors.map(function(author) { return author.family + ", " + author.given[0]}).join(", ");
 
                     if (index !== null) {
                         items[i].fromApi = {title: title, type: type, containerTitle: containerTitle, authors: formattedAuthors};
@@ -261,10 +262,85 @@
                 </div>
             }});
 
+        var InfoBox = React.createClass({
+            getInitialState: function() {
+                return {status: {"event-history": [], "citation-history": []}};
+            },
+
+            fetch: function() {
+                var self = this;
+                $.get("/status").then(function(result){
+                    self.setState({status: result});
+                });
+            },
+            
+            componentDidMount: function() {
+                this.fetch();
+                setInterval(this.fetch.bind(null, this), 1000);
+            },
+
+
+            render: function() {
+                var maxValue = 100;
+
+                var eventHistory = this.state.status['event-history'];
+                var eventMultiplier = maxValue / (Math.max.apply(null, eventHistory) || 1);
+                eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
+                var numEdits = 0;
+                if (eventHistory.length > 0) {
+                    numEdits = eventHistory[0];
+                }
+
+
+                var citationHistory = this.state.status['citation-history'];
+                var citationMultiplier = maxValue / (Math.max.apply(null, citationHistory) || 1);
+                citationHistory = citationHistory.map(function(x) { return Math.ceil(x * citationMultiplier)});
+                var numCitations = 0;
+
+                if (citationHistory.length > 0) {
+                    numCitations = citationHistory[0];
+                }
+
+                var containerStyle = {"height": "100px", "width": "100%", "overflow": "hidden", "position": "relative"};
+                return <div className='row'>
+                        <div className='col-md-6'>
+                            <div>{numEdits} Wikipedia edits in last 5 seconds</div>
+                            <div style={containerStyle}>
+                            {eventHistory.map(function(c, i) {
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#a0a0a0", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
+
+                                return <div style={style} key={i}>
+                                          
+                                        </div>
+                            })}
+                            </div>
+                            
+                        </div>
+                        <div className='col-md-6'>
+                            {numCitations} DOI citations in the last 5 minutes<br />
+                            <div style={containerStyle}>
+                            {citationHistory.map(function(c, i) {
+                                var outerStyle = {"width": "10px", "display": "inline", "padding": "2px", "height": "100px"};
+                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "black", "display": "inline", "position": "absolute", "bottom": "0px"};
+
+                                return <div style={style} key={i}>
+                                        </div>
+                            })} 
+                            </div>
+                        </div>
+                       </div>
+            }
+
+        });
+
         React.render(
-            <StreamTable />,
+            <div>
+            <InfoBox />
+            <StreamTable />
+            </div>,
             document.getElementById('content')
         );
+
 
         // from https://github.com/CrossRef/cayenne/blob/master/src/cayenne/item_tree.clj#L9
         window.itemTypes = {
@@ -590,7 +666,6 @@
             'kr': 'Kanuri'};
 
         </script>
-
 
         <div class='container' id='content'>
         <p class="strong">If you are having problems viewing this page please email labs@crossref.org . This page requires JavaScript and a modern browser to work.</p>
