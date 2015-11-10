@@ -62,8 +62,7 @@
                                    :num-workers state/num-workers
                                    :event-history @state/event-buckets
                                    :citation-history @state/citation-buckets
-                                   :recent-events (> (apply + (take 10 @state/event-buckets)) 0)
-                                   })))
+                                   :recent-events (> (apply + (take 10 @state/event-buckets)) 0)})))
 
 (defresource events
   []

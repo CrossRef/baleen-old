@@ -313,9 +313,9 @@
                             <div>{numEdits} <strong>Wikipedia edits</strong> in last <strong>5 seconds</strong></div>
                             <div style={containerStyle}>
                             {eventHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#505050", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": i * 10};
                                 if (i == 0) {
-                                    style.backgroundColor = "#a0a0a0";
+                                    style.backgroundColor = "#aaa";
                                 }
                                 return <div style={style} key={i}>
                                           
@@ -328,9 +328,9 @@
                             {numCitations} <strong>DOI citations</strong> in the last <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
                             {citationHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "10px", "backgroundColor" : "505050", "display": "inline", "position": "absolute", "bottom": "0px","left": i * 10};
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": i * 10};
                                 if (i == 0) {
-                                    style.backgroundColor = "#a0a0a0";
+                                    style.backgroundColor = "#aaa";
                                 }
                                 return <div style={style} key={i}>
                                         </div>
