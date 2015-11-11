@@ -35,7 +35,14 @@
   (k/insert event (k/values {:action action :old-id old-id :new-id new-id :doi doi :date date :server server :title title :url url})))
 
 (defn get-events-page [from-id]
-
   (if from-id
     (k/select event (k/where (< :id from-id)) (k/order :id :DESC) (k/limit page-size))
     (k/select event (k/order :id :DESC) (k/limit page-size))))
+
+(defn get-citations-for-period [[end start]]
+  (->
+    (k/select event (k/aggregate (count :*) :cnt)
+      (k/where (>= :date (coerce/to-sql-time start)))
+      (k/where (< :date (coerce/to-sql-time end))))
+    first
+    :cnt))

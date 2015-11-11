@@ -288,7 +288,8 @@
                 var maxValue = 100;
 
                 var eventHistory = this.state.status['event-history'];
-                var eventMultiplier = maxValue / (Math.max.apply(null, eventHistory) || 1);
+                var maxEvent = Math.max.apply(null, eventHistory) || 1;
+                var eventMultiplier = maxValue / maxEvent;
                 var numEdits = 0;
                 if (eventHistory.length > 0) {
                     numEdits = eventHistory[0];
@@ -297,7 +298,9 @@
                 eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
 
                 var citationHistory = this.state.status['citation-history'];
-                var citationMultiplier = maxValue / (Math.max.apply(null, citationHistory) || 1);
+                
+                var maxCitation = Math.max.apply(null, citationHistory) || 1;
+                var citationMultiplier = maxValue / maxCitation;
                 var numCitations = 0;
 
                 if (citationHistory.length > 0) {
@@ -312,8 +315,9 @@
                         <div className='col-md-6'>
                             <div>{numEdits} <strong>Wikipedia edits</strong> in last <strong>5 seconds</strong></div>
                             <div style={containerStyle}>
+                            <small>{maxEvent}</small>
                             {eventHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": i * 10};
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": (i + 2) * 10};
                                 if (i == 0) {
                                     style.backgroundColor = "#aaa";
                                 }
@@ -327,6 +331,7 @@
                         <div className='col-md-6'>
                             {numCitations} <strong>DOI citations</strong> in the last <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
+                            <small>{maxCitation}</small>
                             {citationHistory.map(function(c, i) {
                                 var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": i * 10};
                                 if (i == 0) {
