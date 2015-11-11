@@ -333,7 +333,7 @@
                             <div style={containerStyle}>
                             <small>{maxCitation}</small>
                             {citationHistory.map(function(c, i) {
-                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": i * 10};
+                                var style = {"height": c + "px", "width": "9px", "backgroundColor" : "#555", "display": "inline", "position": "absolute", "bottom": "0px", "left": (i + 2) * 10};
                                 if (i == 0) {
                                     style.backgroundColor = "#aaa";
                                 }
