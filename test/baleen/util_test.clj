@@ -1,6 +1,6 @@
-(ns wikipediawatcher.util-test
+(ns baleen.util-test
   (:require [clojure.test :refer :all]
-            [wikipediawatcher.util :refer :all]))
+            [baleen.util :refer :all]))
 
 (deftest a-test
   (testing "Can extract DOIs from commonly found URL formats"

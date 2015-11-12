@@ -1,4 +1,4 @@
-(ns wikipediawatcher.util
+(ns baleen.util
   (:import [java.net URLDecoder URL MalformedURLException])
   (:require [net.cgrand.enlive-html :as html])
   (:require [clojure.set :refer [difference]]

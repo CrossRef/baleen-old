@@ -11,7 +11,12 @@
         <script src="/lib/moment/moment.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 
+        <script>
+        window.vocab = {{vocab|json|safe}};
+        </script>
+
         <script type="text/jsx">
+
         window.counter = (function() {
             var count = 0;
 
@@ -313,7 +318,7 @@
                 var containerStyle = {"height": "100px", "width": "100%", "overflow": "hidden", "position": "relative"};
                 return <div className='row'>
                         <div className='col-md-6'>
-                            <div>{numEdits} <strong>Wikipedia edits</strong> in last <strong>5 seconds</strong></div>
+                            <div>{numEdits} <strong>{window.vocab['event-count-label']}</strong> in last <strong>5 seconds</strong></div>
                             <div style={containerStyle}>
                             <small>{maxEvent}</small>
                             {eventHistory.map(function(c, i) {
@@ -329,7 +334,7 @@
                             
                         </div>
                         <div className='col-md-6'>
-                            {numCitations} <strong>DOI citations</strong> in the last <strong>5 minutes</strong><br />
+                            {numCitations} <strong>{window.vocab['citation-count-label']}</strong> in the last <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
                             <small>{maxCitation}</small>
                             {citationHistory.map(function(c, i) {

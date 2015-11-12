@@ -1,4 +1,4 @@
-(ns wikipediawatcher.database
+(ns baleen.database
   (:require [crossref.util.config :refer [config]])
   (:require [korma.db :as kdb])
   (:require [korma.core :as k])

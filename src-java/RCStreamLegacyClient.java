@@ -1,4 +1,4 @@
-package wikipediawatcher;
+package baleen;
 
 import io.socket.*;
 import java.net.URISyntaxException;
@@ -7,11 +7,14 @@ import java.util.*;
 import org.json.*;
 import clojure.lang.IFn;
 
-public class Client {
+/* RCStream client using legacy 0.9 websocket.io */
+public class RCStreamLegacyClient {
 	private IFn callback;
+    private String subscribe;
 
-	public Client(IFn callback) {
+	public RCStreamLegacyClient(IFn callback, String subscribe) {
 		this.callback = callback;
+        this.subscribe = subscribe;
 	}
 	
 	public void run() throws URISyntaxException, MalformedURLException {
@@ -40,13 +43,12 @@ public class Client {
             @Override
             public void onConnect() {
                 System.out.println("Connection established");
-                socket.emit("subscribe", "*");
-                // socket.emit("subscribe", "en.wikipedia.org");
+                socket.emit("subscribe", RCStreamLegacyClient.this.subscribe);
             }
 
             @Override
             public void on(String event, IOAcknowledge ack, Object... args) {
-                Client.this.callback.invoke(event, args);
+                RCStreamLegacyClient.this.callback.invoke(event, args);
             }
         });
 	}

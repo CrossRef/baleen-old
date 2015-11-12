@@ -1,16 +1,17 @@
-(ns wikipediawatcher.core
-  (:import [wikipediawatcher Client])
+(ns baleen.wikimedia.wikimedia
+  (:import [baleen RCStreamLegacyClient])
   (:import [java.net URLEncoder])
   (:require [clj-time.core :as clj-time])
   (:require [clojure.data.json :as json]
             [clojure.core.async :refer [chan >!! >! <! go]])
-  (:require [wikipediawatcher.database :as db]
-            [wikipediawatcher.server :as server]
-            [wikipediawatcher.state :as state])
+  (:require [baleen.database :as db]
+            [baleen.server :as server]
+            [baleen.state :as state])
   (:require [crossref.util.config :refer [config]])
   (:require [org.httpkit.client :as http]
             [org.httpkit.server :as http-server])
-  (:require [wikipediawatcher.util :as util]))
+  (:require [baleen.util :as util])
+  (:require [clojure.tools.logging :refer [error info]]))
 
 
 (defn process-change [worker-id args]
@@ -63,7 +64,6 @@
         (doseq [doi removed-dois]
           (db/insert "remove" old-revision new-revision doi server-name title page-url date))))))
 
-
 (dotimes [worker-id state/num-workers]
   (go 
     (loop []
@@ -73,10 +73,7 @@
 (defn callback [type-name args]
   (>!! state/changes args))
 
-(defonce s (atom nil))
-
-(defn -main
-  [& args]
-  (let [client (new Client callback)]
-    (reset! s (http-server/run-server #'server/app {:port (:port config)}))
+(defn run []
+  (let [client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))]
     (.run client)))
+

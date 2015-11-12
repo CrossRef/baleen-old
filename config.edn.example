@@ -1,4 +1,8 @@
 {:port 2829
  :db-username ""
  :db-password ""
- :db-name ""}
+ :db-name ""
+
+ ; Only one source may be enabled at once.
+ :enabled-source :wikimedia
+ :source-config {:wikimedia {:subscribe "*"}}}

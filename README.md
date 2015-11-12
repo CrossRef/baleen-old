@@ -1,8 +1,14 @@
 # Baleen
 
-Watch Wikipedia / Wikimedia for citations of DOIs. Live-stream of DOIs being cited and uncited.
+Watch a live stream of events for citations of  DOIs. Currently supports Wikimedia RCStream.
 
-Note: this will download a copy of every article every time it's downloaded.
+Should be run on a few machines concurrently for redundancy.
+
+## Wikipedia
+
+### TODO
+ - reconnect on disconnection
+ - retry requests
 
 ## Installation
 

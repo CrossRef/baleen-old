@@ -1,8 +1,10 @@
-(ns wikipediawatcher.state
-  (:require [wikipediawatcher.database :as db])
+(ns baleen.state
+  (:require [baleen.database :as db])
   (:require [clojure.core.async :refer [chan dropping-buffer]])
   (:require [clj-time.core :as clj-time])
   (:require [overtone.at-at :as at-at]))
+
+(defonce server (atom nil))
 
 (def my-pool (at-at/mk-pool))
 

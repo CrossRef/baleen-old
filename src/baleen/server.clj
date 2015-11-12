@@ -1,6 +1,6 @@
-(ns wikipediawatcher.server
-  (:require [wikipediawatcher.state :as state]
-            [wikipediawatcher.database :as db])
+(ns baleen.server
+  (:require [baleen.state :as state]
+            [baleen.database :as db])
   (:require [clj-time.core :as t]
             [clj-time.coerce :as coerce]
             [clj-time.format :as f])
@@ -23,14 +23,19 @@
 
 
 (selmer.parser/cache-off!)
-            
+
+(def vocabs
+  {:wikimedia {:title "Wikipedia DOI citation live stream"
+               :event-count-label "Wikipedia edits"
+               :citation-count-label "DOI citation events"}})
+   
 ; Just serve up a blank page with JavaScript to pick up from event-types-socket.
 (defresource home
   []
   :available-media-types ["text/html"] 
   :handle-ok (fn [ctx]
-               (let []
-                 (render-file "templates/home.html" {}))))
+               (let [vocab (get vocabs (:enabled-source config))]
+                 (render-file "templates/home.html" {:vocab vocab}))))
 
 (defn register-listener [listener-chan]
   (swap! state/broadcast-channels conj listener-chan))
@@ -53,7 +58,6 @@
   []
   :available-media-types ["application/json"]
   :handle-ok (fn [ctx]
-             
                   (json/write-str {:backlog (count state/changes-buffer)
                                    :backlog-limit state/channel-size
                                    :subscribers (count @state/broadcast-channels)
@@ -89,3 +93,6 @@
 (def app
   (-> app-routes
       handler/site))
+
+(defn start []
+  (reset! state/server (run-server #'app {:port (:port config)})))
