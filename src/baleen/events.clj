@@ -10,7 +10,8 @@
             [clj-time.core :as clj-time]
             [overtone.at-at :as at-at])
   (:require [clojure.core.async :refer [chan >!! >! <! go]]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.tools.logging :refer [error info]])
   (:require [org.httpkit.server :as http-server]))
 
 (def page-size 20)
@@ -74,11 +75,13 @@
 (defn register-listener
   "Register a websocket listener."
   [listener-chan]
+  (info "Register websocket listener" (str listener-chan) "now" (count @state/broadcast-channels))
   (swap! state/broadcast-channels conj listener-chan))
 
 (defn unregister-listener
   "Unregister a websocket listener."
   [listener-chan]
+  (info "Unregister websocket listener" (str listener-chan) "now" (count @state/broadcast-channels))
   (swap! state/broadcast-channels disj listener-chan))
 
 (defn boot []
@@ -86,10 +89,12 @@
   (let [source @state/source
         process-f (:process-f source)]
 
+  (info "Input buckets size " (:num-input-buckets source))
   ; Start with empty event buckets. They'll fill up soon enough.
   (reset! state/input-count-buckets (apply list (repeat (:num-input-buckets source) 0)))
 
   ; On load populate with previous data, if there is any.
+  (info "Citation buckets size " (:num-citation-buckets source))
   (reset! state/citation-count-buckets (citation-history))
 
   ; Schedule the buckets to shift.
@@ -97,9 +102,11 @@
   (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
 
   ; Start source ingesting into queue.
+  (info "Start source")
   ((source :start-f))
 
   ; Start workers processing queue.
+  (info "Start " (:num-workers source) " workers")
     (dotimes [worker-id (:num-workers source)]
       (go 
         (loop []

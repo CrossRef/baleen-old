@@ -22,19 +22,17 @@
 
                :start-f wikimedia/start
                :export-f wikimedia/export
-               :process-f wikimedia/process
-               }})
-
-
-
+               :process-f wikimedia/process}})
 
 (defn -main
   [& args]
   (when-not sources (:enabled-source config)
     (error "Didn't recognise source" (:enabled-source config)))
 
+  (info "Using " (:enabled-source config))
   (reset! state/source (get sources (:enabled-source config)))
-
+  (info "Starting source")
   (events/boot)
-
-  (server/start))
+  (info "Starting server")
+  (server/start)
+  (info "Running"))

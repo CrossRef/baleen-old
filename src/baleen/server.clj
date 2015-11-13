@@ -67,8 +67,6 @@
                             url :url
                             action :doi}]
                         ((:export-f @state/source) event-key doi (str date) url action)) events)
-
-            
           next-offset (-> events last :id)]
 
       (json/write-str {:events exported-events
