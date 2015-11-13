@@ -5,7 +5,7 @@
             [clojure.string :as string]))
 
 (defn extract-doi-from-url [text]
-  "Convert a link to a DOI. Accepts protocol-relative URLs."
+  "Convert a link, as found in HTML, to a DOI. Accepts protocol-relative URLs."
   (when text
     ; If we get non-URL things, like fragments, skip.
     (try 
@@ -25,8 +25,7 @@
       
       (when likely-doi url-path)))
 
-    (catch MalformedURLException e
-      )
+    (catch MalformedURLException e)
 
     (catch IllegalArgumentException e
       (locking *out* (prn "MALFORMED" (str e)))))))

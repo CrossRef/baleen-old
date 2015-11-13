@@ -1,14 +1,13 @@
 (ns baleen.server
   (:require [baleen.state :as state]
-            [baleen.database :as db])
+            [baleen.database :as db]
+            [baleen.events :as events])
   (:require [clj-time.core :as t]
             [clj-time.coerce :as coerce]
             [clj-time.format :as f])
-  (:require 
-    [compojure.core :refer [context defroutes GET ANY POST]]
-           [compojure.handler :as handler]
-           [compojure.route :as route]
-  )
+  (:require [compojure.core :refer [context defroutes GET ANY POST]]
+            [compojure.handler :as handler]
+            [compojure.route :as route])
   (:require [ring.util.response :refer [redirect]])
   (:require [liberator.core :refer [defresource resource]]
             [liberator.representation :refer [ring-response]])
@@ -23,34 +22,22 @@
 
 
 (selmer.parser/cache-off!)
-
-(def vocabs
-  {:wikimedia {:title "Wikipedia DOI citation live stream"
-               :event-count-label "Wikipedia edits"
-               :citation-count-label "DOI citation events"}})
    
 ; Just serve up a blank page with JavaScript to pick up from event-types-socket.
 (defresource home
   []
   :available-media-types ["text/html"] 
   :handle-ok (fn [ctx]
-               (let [vocab (get vocabs (:enabled-source config))]
-                 (render-file "templates/home.html" {:vocab vocab}))))
-
-(defn register-listener [listener-chan]
-  (swap! state/broadcast-channels conj listener-chan))
-
-(defn unregister-listener [listener-chan]
-  (swap! state/broadcast-channels disj listener-chan))
+               (render-file "templates/home.html" {:source @state/source})))
 
 (defn event-websocket
   [request]
    (with-channel request output-channel
-    (register-listener output-channel)
+    (events/register-listener output-channel)
     
     (on-close output-channel
               (fn [status]
-                (unregister-listener output-channel)))
+                (events/unregister-listener output-channel)))
     (on-receive output-channel
               (fn [data]))))
 
@@ -58,29 +45,33 @@
   []
   :available-media-types ["application/json"]
   :handle-ok (fn [ctx]
-                  (json/write-str {:backlog (count state/changes-buffer)
-                                   :backlog-limit state/channel-size
+                  (json/write-str {:backlog (count state/input-buffer)
+                                   :backlog-limit state/input-buffer-size
                                    :subscribers (count @state/broadcast-channels)
-                                   :most-recent-event (when-let [x @state/most-recent-event] (str x))
+                                   :most-recent-input (when-let [x @state/most-recent-input] (str x))
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
-                                   :num-workers state/num-workers
-                                   :event-history @state/event-buckets
-                                   :citation-history @state/citation-buckets
-                                   :recent-events (> (apply + (take 10 @state/event-buckets)) 0)})))
+                                   :num-workers (:num-workers @state/source)
+                                   :input-history @state/input-count-buckets
+                                   :citation-history @state/citation-count-buckets
+                                   :recent-events (> (apply + (take 10 @state/input-count-buckets)) 0)})))
 
 (defresource events
   []
   :available-media-types ["application/json"]
   :handle-ok (fn [ctx]
     (let [start-id (when-let [id (get-in ctx [:request :params :start])] (Integer/parseInt id))
-          events (db/get-events-page start-id)
-          events (map (fn [event] (assoc event :date (str (:date event))
-                                               :wiki (:server event))
+          events (events/get-citations-page start-id)
+          exported-events (map (fn [{event-key :event-key
+                            doi :doi
+                            date :date
+                            url :url
+                            action :doi}]
+                        ((:export-f @state/source) event-key doi (str date) url action)) events)
 
-            ) events)
+            
           next-offset (-> events last :id)]
 
-      (json/write-str {:events events
+      (json/write-str {:events exported-events
                        :next-offset next-offset}))))
 
 (defroutes app-routes

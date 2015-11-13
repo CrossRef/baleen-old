@@ -2,9 +2,9 @@
 
 Watch a live stream of events for citations of  DOIs. Currently supports Wikimedia RCStream.
 
-Should be run on a few machines concurrently for redundancy.
-
 ## Wikipedia
+
+Watches the RCStream (Recent Changes Stream) for edits and extracts the DOIs 
 
 ### TODO
  - reconnect on disconnection

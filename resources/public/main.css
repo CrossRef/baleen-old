@@ -370,7 +370,9 @@ body {
 }
 
 .navbar-header {
-  height: 100px;
+  /*height: 100px;*/
+  display: block;
+  margin-top: 10px;
 }
 
 body {

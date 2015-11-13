@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{{vocab.title}}</title>
+    <title>{{source.vocab.title}}</title>
 
     <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.css" />
 
@@ -42,7 +42,6 @@
     <meta name="msapplication-TileImage" content="https://assets.crossref.org/favicon/mstile-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-
     <script src="/lib/jquery/dist/jquery.min.js"></script>
     <script src="/lib/jquery-ui/jquery-ui.js"></script>
   </head>
@@ -50,21 +49,20 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
-          
-          <a class="navbar-brand" href="/"><span><img src="http://assets.crossref.org/logo/crossref-logo-landscape-100.png"><span style="font-size: .9em;">&nbsp;{{vocab.title}}</span></span></a>
+          <div class="pull-left">
+            <a class="navbar-brand" href="/">
+              <span style="font-size: .9em;">&nbsp;{{source.vocab.title}}</span>
+            </a>
+          </div>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-          </ul>
+          <div class="nav navbar-nav navbar-right">
+          <img src="http://assets.crossref.org/logo/crossref-logo-100.png" style="margin-top: 10px; margin-bottom: 10px">
+          </div>
         </div>
       </div>
     </nav>
-
     {% block "content" %}{% endblock %}
-
-
     <script src="/lib/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="/lib/bootstrap/dist/js/bootstrap.js" ></script>
   </body>
