@@ -75,13 +75,13 @@
 (defn register-listener
   "Register a websocket listener."
   [listener-chan]
-  (info "Register websocket listener" (str listener-chan) "now" (count @state/broadcast-channels))
+  (info "Register websocket listener" (str listener-chan) "now" (inc (count @state/broadcast-channels)))
   (swap! state/broadcast-channels conj listener-chan))
 
 (defn unregister-listener
   "Unregister a websocket listener."
   [listener-chan]
-  (info "Unregister websocket listener" (str listener-chan) "now" (count @state/broadcast-channels))
+  (info "Unregister websocket listener" (str listener-chan) "now" (dec (count @state/broadcast-channels)))
   (swap! state/broadcast-channels disj listener-chan))
 
 (defn boot []
