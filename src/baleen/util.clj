@@ -39,7 +39,7 @@
   (let [old-dois (extract-dois-from-html old-html)
         new-dois (extract-dois-from-html new-html)
 
-        added (difference old-dois new-dois)
-        removed (difference new-dois old-dois)]
+        added (difference new-dois old-dois)
+        removed (difference old-dois new-dois)]
 
         [added removed new-dois]))

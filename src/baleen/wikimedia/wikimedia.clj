@@ -48,11 +48,11 @@
 
         ; Broadcast this to all listeners.
         (doseq [doi added-dois]
-          (let [event-key (json/write-str [old-revision new-revision title server-name "cite"])]
+          (let [event-key (json/write-str [old-revision new-revision doi title server-name "cite"])]
             (events/fire-citation event-key doi date url "cite")))
 
         (doseq [doi removed-dois]
-          (let [event-key (json/write-str [old-revision new-revision title server-name "uncite"])]
+          (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
             (events/fire-citation event-key doi date url "uncite")))))))
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
@@ -351,7 +351,7 @@
 
 
 (defn export [event-key doi date url action]
-  (let [[old-revision new-revision title server action] (json/read-str event-key)
+  (let [[old-revision new-revision doi title server action] (json/read-str event-key)
         pretty-url (str server "/wiki/" title)]
   {:input-container-title (server-name server)
    :date date
