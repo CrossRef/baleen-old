@@ -49,6 +49,7 @@ public class RCStreamLegacyClient {
             public void onConnect() {
                 System.out.println("Connection established");
                 socket.emit("subscribe", RCStreamLegacyClient.this.subscribe);
+                System.out.println("Subscribed");
             }
 
             @Override
