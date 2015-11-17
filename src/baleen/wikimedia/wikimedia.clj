@@ -13,15 +13,27 @@
             [org.httpkit.server :as http-server])
   (:require [baleen.util :as util])
   (:require [robert.bruce :refer [try-try-again]])
-  (:require [clojure.tools.logging :refer [error info]]))
+  (:require [clojure.tools.logging :refer [error info]]
+            [clojure.set :refer [difference]]))
 
-(defn fetch-page [url options]
-  (try-try-again {:sleep 5000 :tries 10}
+(defn fetch-page-dois
+  "Fetch the set of DOIs that are mentioned in the given URL."
+  [url title revision]
+  ; If we've fetched this before it's ready, we get an empty page with this link.
+  ; It's differenet for each language, so the only common thing is '/delete'.
+  ; Keep trying until we get something.
+  (try-try-again {:sleep 5000 :tries 10 :return? :truthy?}
       (fn []
-        (let [result (http/get url options)
-              body (:body @result)]
-              ; TODO detect race condition.
-          body))))
+        (let [result (http/get url {:title title :oldid revision})
+              body (or (:body @result) "")
+              links (util/extract-links-from-html body)
+              has-deleted-link (some (fn [link]
+                                            (when-let [href (-> link :attrs :href)] (.contains href "/delete")))  links)
+              quotes-revision (.contains body (str revision))
+              dois (util/filter-doi-links links)
+              fail (and (empty? dois) has-deleted-link quotes-revision)]
+          (when fail (info "Failed" title revision "retry" ))
+          (when-not fail dois)))))
 
 
 (defn process [worker-id args]
@@ -46,12 +58,13 @@
     (when (and (= event-type "edit")
                server-url title old-revision new-revision)
       
-  (let [old-content (fetch-page fetch-url {:query-params {:title title :oldid old-revision}})
-        new-content (fetch-page fetch-url {:query-params {:title title :oldid new-revision}})
+  (let [old-dois (fetch-page-dois fetch-url title old-revision)
+        new-dois (fetch-page-dois fetch-url title new-revision)
         ; this method is private but this is better than copy-pasting.
         url (str fetch-url "?" (#'http/query-string {:title title}))
 
-        [added-dois removed-dois now-dois] (util/doi-changes old-content new-content)]
+        added-dois  (difference new-dois old-dois)
+        removed-dois (difference old-dois new-dois)]
 
         (when (or (not-empty added-dois) (not-empty removed-dois))
           (reset! state/most-recent-citation (clj-time/now)))
@@ -385,7 +398,9 @@
     ; The logger is mega-chatty (~50 messages per second at INFO). We have alternative ways of seeing what's going on.
     (.setLevel logger Level/OFF)
     (reset! client the-client)
-    (.run the-client)))
+    (info "Start wikimedia...")
+    (.run the-client)
+    (info "Wikimedia running.")))
 
 (defn restart []
   (info "Reconnect wikimedia...")

@@ -1,8 +1,7 @@
 (ns baleen.util
   (:import [java.net URLDecoder URL MalformedURLException])
   (:require [net.cgrand.enlive-html :as html])
-  (:require [clojure.set :refer [difference]]
-            [clojure.string :as string]))
+  (:require [clojure.string :as string]))
 
 (defn extract-doi-from-url [text]
   "Convert a link, as found in HTML, to a DOI. Accepts protocol-relative URLs."
@@ -30,16 +29,11 @@
     (catch IllegalArgumentException e
       (locking *out* (prn "MALFORMED" (str e)))))))
 
-(defn extract-dois-from-html [input]
-  (let [links (html/select (html/html-snippet input) [:a])
-        doi-links (keep #(-> % :attrs :href extract-doi-from-url) links)]
+(defn extract-links-from-html [input]
+    (let [links (html/select (html/html-snippet input) [:a])]
+      (set links)))
+
+(defn filter-doi-links [links]
+  (let [doi-links (keep #(-> % :attrs :href extract-doi-from-url) links)]
     (set doi-links)))
 
-(defn doi-changes [old-html new-html]
-  (let [old-dois (extract-dois-from-html old-html)
-        new-dois (extract-dois-from-html new-html)
-
-        added (difference new-dois old-dois)
-        removed (difference old-dois new-dois)]
-
-        [added removed new-dois]))

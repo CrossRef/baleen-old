@@ -106,10 +106,12 @@
   (reset! state/citation-count-buckets (citation-history))
 
   ; Schedule the buckets to shift.
+  (info "Set up bucket timers")
   (at-at/every (:input-bucket-time source) #(swap! state/input-count-buckets shift-bucket) state/at-at-pool)
   (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
 
   ; Start delayed to let things populate.
+  (info "Delay watchdog")
   (at-at/after 30000
     (fn []
         (info "Start watchdog time" (:watchdog-time source))
