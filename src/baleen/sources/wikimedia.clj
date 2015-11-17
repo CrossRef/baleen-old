@@ -1,4 +1,4 @@
-(ns baleen.wikimedia.wikimedia
+(ns baleen.sources.wikimedia
   (:import [baleen RCStreamLegacyClient])
   (:import [java.net URLEncoder]
             [java.util.logging Logger Level])

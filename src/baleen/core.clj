@@ -1,6 +1,7 @@
 (ns baleen.core
   (:require [baleen.state :as state]
-            [baleen.wikimedia.wikimedia :as wikimedia]
+            [baleen.sources.wikimedia :as wikimedia]
+            [baleen.sources.gnip :as gnip]
             [baleen.server :as server]
             [baleen.events :as events])
   (:require [crossref.util.config :refer [config]])
@@ -25,7 +26,25 @@
                :process-f wikimedia/process
 
                :watchdog-time 10000
-               :restart-f wikimedia/restart}})
+               :restart-f wikimedia/restart}
+
+   :gnip {:vocab {:title "Tweets mentioning DOIs live stream"
+                  :input-count-label "Tweets"
+                  :citation-count-label "DOI mentions"}
+          :num-workers 50
+
+          :input-bucket-time 5000
+          :citation-bucket-time 300000
+
+          :num-input-buckets 200
+          :num-citation-buckets 200
+
+          :start-f gnip/start
+          :export-f gnip/export
+          :process-f gnip/process
+
+          :watchdog-time 10000
+          :restart-f gnip/restart}})
 
 (defn -main
   [& args]
