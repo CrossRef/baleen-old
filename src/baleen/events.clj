@@ -68,7 +68,7 @@
     (catch com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException _ nil))
 
   ; Broadcast to all websocket listeners.
-  (let [exported (json/write-str ((:export-f @state/source) event-key doi (str date) url action))]
+  (let [exported (json/write-str ((:export-f @state/source) 0 event-key doi (str date) url action))]
     (doseq [c @state/broadcast-channels]
       (http-server/send! c exported))))
 

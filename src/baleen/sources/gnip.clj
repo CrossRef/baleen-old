@@ -32,9 +32,10 @@
   (events/fire-citation event-key doi date url "tweet")))
 
 
-(defn export [event-key doi date url action]
+(defn export [id event-key doi date url action]
   (let [[tweet-id tweet-text doi] (json/read-str event-key)]
-  {:input-container-title "Tweet"
+  {:id id
+   :input-container-title "Tweet"
    :date date
    :doi doi
    :title tweet-text

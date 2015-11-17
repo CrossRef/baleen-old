@@ -373,11 +373,12 @@
     (str (get server-names subdomain subdomain) " Wikipedia")))
 
 
-(defn export [event-key doi date url action]
+(defn export [id event-key doi date url action]
   (let [[old-revision new-revision doi title server action] (json/read-str event-key)
         pretty-url (str server "/wiki/" title)
         action-url (str "https://" server "/w/index.php?" (#'http/query-string {:title title :type "revision" :oldid old-revision :diff new-revision}))]
-  {:input-container-title (server-name server)
+  {:id id
+   :input-container-title (server-name server)
    :date date
    :doi doi
    :title title

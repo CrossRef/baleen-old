@@ -65,12 +65,13 @@
   :handle-ok (fn [ctx]
     (let [start-id (when-let [id (get-in ctx [:request :params :start])] (Integer/parseInt id))
           events (events/get-citations-page start-id)
-          exported-events (map (fn [{event-key :event-key
+          exported-events (map (fn [{id :id 
+                            event-key :event-key
                             doi :doi
                             date :date
                             url :url
                             action :doi}]
-                        ((:export-f @state/source) event-key doi (str date) url action)) events)
+                        ((:export-f @state/source) id event-key doi (str date) url action)) events)
           next-offset (-> events last :id)]
 
       (json/write-str {:events exported-events
