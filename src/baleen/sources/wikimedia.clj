@@ -14,7 +14,8 @@
   (:require [baleen.util :as util])
   (:require [robert.bruce :refer [try-try-again]])
   (:require [clojure.tools.logging :refer [error info]]
-            [clojure.set :refer [difference]]))
+            [clojure.set :refer [difference]])
+  (:require [overtone.at-at :as at-at]))
 
 (defn fetch-page-dois
   "Fetch the set of DOIs that are mentioned in the given URL."
@@ -386,7 +387,10 @@
    :action action}))
 
 (defn- callback [type-name args]
-  (events/fire-input args))
+  ; Delay event to give a chance for Wikimedia servers to propagage edit.
+  (at-at/after 10000
+    #(events/fire-input args)
+    state/at-at-pool))
 
 (def client (atom nil))
 
