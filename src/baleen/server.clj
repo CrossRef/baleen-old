@@ -18,8 +18,12 @@
             [crossref.util.config :refer [config]])
   (:require [clojure.walk :refer [prewalk]])
   (:require [clojure.core.async :as async :refer [<! <!! >!! >! go chan]])
-  (:require [org.httpkit.server :refer [with-channel on-close on-receive send! run-server]]))
+  (:require [org.httpkit.server :refer [with-channel on-close on-receive send! run-server]])
+  (:require [heartbeat.core :refer [def-service-check]]
+            [heartbeat.ring :refer [wrap-heartbeat]]))
 
+(def-service-check :mysql (fn [] (db/heartbeat)))
+(def-service-check :events (fn [] (events/ok)))
 
 (selmer.parser/cache-off!)
    
@@ -81,7 +85,8 @@
 
 (def app
   (-> app-routes
-      handler/site))
+      handler/site
+      (wrap-heartbeat)))
 
 (defn start []
   (reset! state/server (run-server #'app {:port (:port config)})))

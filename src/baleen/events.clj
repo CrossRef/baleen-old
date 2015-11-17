@@ -84,11 +84,13 @@
   (info "Unregister websocket listener" (str listener-chan) "now" (dec (count @state/broadcast-channels)))
   (swap! state/broadcast-channels disj listener-chan))
 
-(defn watchdog []
+(defn ok []
   ; One event in the last 5 bucketsworth.
-  (let [ok (> (apply + (take 5 @state/input-count-buckets)) 0)]
-    (when-not ok (error "Watchdog failed")
-      ((:restart-f @state/source)))))
+  (> (apply + (take 5 @state/input-count-buckets)) 0))
+
+(defn watchdog []
+    (when-not (ok) (error "Watchdog failed")
+      ((:restart-f @state/source))))
 
 (defn boot []
   {:pre @state/source}

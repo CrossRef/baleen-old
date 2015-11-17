@@ -38,3 +38,7 @@
             :pushed)
    (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
    (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
+
+(defn heartbeat []
+  ; This will either work or fail.
+  (k/select citation-event (k/limit 0)))

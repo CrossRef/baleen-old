@@ -26,8 +26,9 @@
                   [org.clojure/tools.logging "0.3.1"]
                   [overtone/at-at "1.2.0"]
                   [ring "1.3.2"]
-                  [robert/bruce "0.8.0"]]
-                  
+                  [robert/bruce "0.8.0"]
+                  [crossref/heartbeat "0.1.2"]]
+
   :plugins [[lein-localrepo "0.5.3"]]
   :java-source-paths ["src-java"]
   :main ^:skip-aot baleen.core
