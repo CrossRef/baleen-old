@@ -12,8 +12,16 @@
   (:require [org.httpkit.client :as http]
             [org.httpkit.server :as http-server])
   (:require [baleen.util :as util])
+  (:require [robert.bruce :refer [try-try-again]])
   (:require [clojure.tools.logging :refer [error info]]))
 
+(defn fetch-page [url options]
+  (try-try-again {:sleep 5000 :tries 10}
+      (fn []
+        (let [result (http/get url options)
+              body (:body @result)]
+              ; TODO detect race condition.
+          body))))
 
 
 (defn process [worker-id args]
@@ -29,19 +37,21 @@
 
         date (clj-time/now)
 
+        event-type (get data "type")
+
         fetch-url (str "https://" server-name "/w/index.php")
         page-url (str "https://" server-name "/w/index.php?title=" (URLEncoder/encode title "UTF-8"))]
-
     ; This may not be a revision of a page. Ignore if there isn't revision information.
-    (when (and server-url title old-revision new-revision)
+   
+    (when (and (= event-type "edit")
+               server-url title old-revision new-revision)
       
-      (let [
-        old-content (http/get fetch-url {:query-params {:title title :oldid old-revision}})
-        new-content (http/get fetch-url {:query-params {:title title :oldid new-revision}})
+  (let [old-content (fetch-page fetch-url {:query-params {:title title :oldid old-revision}})
+        new-content (fetch-page fetch-url {:query-params {:title title :oldid new-revision}})
         ; this method is private but this is better than copy-pasting.
         url (str fetch-url "?" (#'http/query-string {:title title}))
 
-        [added-dois removed-dois now-dois] (util/doi-changes (:body @old-content) (:body @new-content))]
+        [added-dois removed-dois now-dois] (util/doi-changes old-content new-content)]
 
         (when (or (not-empty added-dois) (not-empty removed-dois))
           (reset! state/most-recent-citation (clj-time/now)))
@@ -352,13 +362,15 @@
 
 (defn export [event-key doi date url action]
   (let [[old-revision new-revision doi title server action] (json/read-str event-key)
-        pretty-url (str server "/wiki/" title)]
+        pretty-url (str server "/wiki/" title)
+        action-url (str "https://" server "/w/index.php?" (#'http/query-string {:title title :type "revision" :oldid old-revision :diff new-revision}))]
   {:input-container-title (server-name server)
    :date date
    :doi doi
    :title title
    :url url
    :pretty-url pretty-url
+   :action-url action-url
    :action action}))
 
 (defn- callback [type-name args]

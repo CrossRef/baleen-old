@@ -87,7 +87,6 @@
 (defn watchdog []
   ; One event in the last 5 bucketsworth.
   (let [ok (> (apply + (take 5 @state/input-count-buckets)) 0)]
-    (info "Watchdog" ok)
     (when-not ok (error "Watchdog failed")
       ((:restart-f @state/source)))))
 

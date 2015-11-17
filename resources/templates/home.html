@@ -34,7 +34,7 @@
                             <div className="itemTitle"><i className='fa-external-link'></i><a href={item.url}>{item.title}</a></div>
                             <a href={item.url}><i className="fa fa-external-link"></i>&nbsp;{item['pretty-url']}</a>
                         </td>
-                        <td className="citeAction"><strong>{item.action}</strong> <br />
+                        <td className="citeAction"><a href={item['action-url']}><strong>{item.action}</strong></a> <br />
                         {moment(item.date).calendar()}
                         </td>
                         <td>
