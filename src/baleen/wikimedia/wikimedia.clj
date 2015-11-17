@@ -24,7 +24,7 @@
   ; Keep trying until we get something.
   (try-try-again {:sleep 5000 :tries 10 :return? :truthy?}
       (fn []
-        (let [result (http/get url {:title title :oldid revision})
+        (let [result (http/get url {:query-params {:title title :oldid revision}})
               body (or (:body @result) "")
               links (util/extract-links-from-html body)
               has-deleted-link (some (fn [link]
@@ -32,51 +32,50 @@
               quotes-revision (.contains body (str revision))
               dois (util/filter-doi-links links)
               fail (and (empty? dois) has-deleted-link quotes-revision)]
+
           (when fail (info "Failed" title revision "retry" ))
           (when-not fail dois)))))
 
+(defn doi-changes [server-name title old-revision new-revision]
+  (let [fetch-url (str "https://" server-name "/w/index.php")
+        page-url (str "https://" server-name "/w/index.php?title=" (URLEncoder/encode title "UTF-8"))
+        old-dois (fetch-page-dois fetch-url title old-revision)
+        new-dois (fetch-page-dois fetch-url title new-revision)
+        
+
+        added-dois  (difference new-dois old-dois)
+        removed-dois (difference old-dois new-dois)]
+  [added-dois removed-dois]))
 
 (defn process [worker-id args]
   (let [arg (first args)
         arg-str (.toString arg)
         data (json/read-str (.toString arg))
-
         server-name (get data "server_name")
         server-url (get data "server_url")
         title (get data "title")
         old-revision (get-in data ["revision" "old"])
         new-revision (get-in data ["revision" "new"])
-
         date (clj-time/now)
-
-        event-type (get data "type")
-
-        fetch-url (str "https://" server-name "/w/index.php")
-        page-url (str "https://" server-name "/w/index.php?title=" (URLEncoder/encode title "UTF-8"))]
+        event-type (get data "type")]
     ; This may not be a revision of a page. Ignore if there isn't revision information.
-   
     (when (and (= event-type "edit")
-               server-url title old-revision new-revision)
-      
-  (let [old-dois (fetch-page-dois fetch-url title old-revision)
-        new-dois (fetch-page-dois fetch-url title new-revision)
-        ; this method is private but this is better than copy-pasting.
-        url (str fetch-url "?" (#'http/query-string {:title title}))
+               server-url title old-revision new-revision)  
+      (let [[added-dois removed-dois] (doi-changes server-name title old-revision new-revision)
+            fetch-url (str "https://" server-name "/w/index.php")
+              ; this method is private but this is better than copy-pasting.
+              url (str fetch-url "?" (#'http/query-string {:title title}))]
+            (when (or (not-empty added-dois) (not-empty removed-dois))
+              (reset! state/most-recent-citation (clj-time/now)))
 
-        added-dois  (difference new-dois old-dois)
-        removed-dois (difference old-dois new-dois)]
+            ; Broadcast this to all listeners.
+            (doseq [doi added-dois]
+              (let [event-key (json/write-str [old-revision new-revision doi title server-name "cite"])]
+                (events/fire-citation event-key doi date url "cite")))
 
-        (when (or (not-empty added-dois) (not-empty removed-dois))
-          (reset! state/most-recent-citation (clj-time/now)))
-
-        ; Broadcast this to all listeners.
-        (doseq [doi added-dois]
-          (let [event-key (json/write-str [old-revision new-revision doi title server-name "cite"])]
-            (events/fire-citation event-key doi date url "cite")))
-
-        (doseq [doi removed-dois]
-          (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
-            (events/fire-citation event-key doi date url "uncite")))))))
+            (doseq [doi removed-dois]
+              (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
+                (events/fire-citation event-key doi date url "uncite")))))))
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
 (def server-names {
