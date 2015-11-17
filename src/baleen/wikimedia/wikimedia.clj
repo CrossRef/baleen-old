@@ -364,9 +364,18 @@
 (defn- callback [type-name args]
   (events/fire-input args))
 
+(def client (atom nil))
+
 (defn start []
-  (let [logger (Logger/getLogger "io.socket")
-        client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))]
+  (info "Connect wikimedia...")
+  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))
+        logger (Logger/getLogger "io.socket")]
     ; The logger is mega-chatty (~50 messages per second at INFO). We have alternative ways of seeing what's going on.
     (.setLevel logger Level/OFF)
-    (.run client)))
+    (reset! client the-client)
+    (.run the-client)))
+
+(defn restart []
+  (info "Reconnect wikimedia...")
+  (.reconnect @client)  
+  (info "Reconnected wikimedia"))

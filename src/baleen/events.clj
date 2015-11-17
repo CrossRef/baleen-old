@@ -84,6 +84,13 @@
   (info "Unregister websocket listener" (str listener-chan) "now" (dec (count @state/broadcast-channels)))
   (swap! state/broadcast-channels disj listener-chan))
 
+(defn watchdog []
+  ; One event in the last 5 bucketsworth.
+  (let [ok (> (apply + (take 5 @state/input-count-buckets)) 0)]
+    (info "Watchdog" ok)
+    (when-not ok (error "Watchdog failed")
+      ((:restart-f @state/source)))))
+
 (defn boot []
   {:pre @state/source}
   (let [source @state/source
@@ -101,9 +108,16 @@
   (at-at/every (:input-bucket-time source) #(swap! state/input-count-buckets shift-bucket) state/at-at-pool)
   (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
 
+  ; Start delayed to let things populate.
+  (at-at/after 30000
+    (fn []
+        (info "Start watchdog time" (:watchdog-time source))
+        (at-at/every (:watchdog-time source) watchdog state/at-at-pool)) state/at-at-pool)
+
   ; Start source ingesting into queue.
   (info "Start source")
   ((source :start-f))
+
 
   ; Start workers processing queue.
   (info "Start " (:num-workers source) " workers")

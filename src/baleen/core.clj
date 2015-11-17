@@ -22,7 +22,10 @@
 
                :start-f wikimedia/start
                :export-f wikimedia/export
-               :process-f wikimedia/process}})
+               :process-f wikimedia/process
+
+               :watchdog-time 10000
+               :restart-f wikimedia/restart}})
 
 (defn -main
   [& args]

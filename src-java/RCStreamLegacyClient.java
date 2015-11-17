@@ -11,15 +11,20 @@ import clojure.lang.IFn;
 public class RCStreamLegacyClient {
 	private IFn callback;
     private String subscribe;
+    private SocketIO socket;
 
 	public RCStreamLegacyClient(IFn callback, String subscribe) {
 		this.callback = callback;
         this.subscribe = subscribe;
 	}
+
+    public void reconnect() {
+        this.socket.reconnect();
+    }
 	
 	public void run() throws URISyntaxException, MalformedURLException {
-		final SocketIO socket = new SocketIO("http://stream.wikimedia.org/rc");
-        socket.connect(
+		this.socket = new SocketIO("http://stream.wikimedia.org/rc");
+        this.socket.connect(
         	new IOCallback() {
             @Override
             public void onMessage(JSONObject json, IOAcknowledge ack) {
