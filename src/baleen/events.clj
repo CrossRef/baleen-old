@@ -90,6 +90,7 @@
 
 (defn watchdog []
     (when-not (ok) (error "Watchdog failed")
+      (prn "Watchdog" (ok))
       ((:restart-f @state/source))))
 
 (defn boot []

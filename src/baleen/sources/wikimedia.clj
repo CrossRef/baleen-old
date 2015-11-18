@@ -395,18 +395,25 @@
 
 (def client (atom nil))
 
+(defn new-client []
+  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))]
+    (.run the-client)))
+
 (defn start []
   (info "Connect wikimedia...")
-  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))
-        logger (Logger/getLogger "io.socket")]
     ; The logger is mega-chatty (~50 messages per second at INFO). We have alternative ways of seeing what's going on.
-    (.setLevel logger Level/OFF)
-    (reset! client the-client)
     (info "Start wikimedia...")
-    (.run the-client)
-    (info "Wikimedia running.")))
+    (.setLevel (Logger/getLogger "io.socket") Level/OFF)
+    (info "Wikimedia running.")
+    (try
+      (reset! client (new-client))
+      (catch Exception e (info "Error starting wikimedia client" (str e)))))
 
 (defn restart []
   (info "Reconnect wikimedia...")
-  (.reconnect @client)  
+  (try
+    (.stop @client)
+    (catch Exception e (info "Error stoppping wikimedia " (str e))))
+  (info "Stopped old wikimedia client...")
+  (start)
   (info "Reconnected wikimedia"))

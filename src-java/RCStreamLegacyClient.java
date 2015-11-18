@@ -21,6 +21,10 @@ public class RCStreamLegacyClient {
     public void reconnect() {
         this.socket.reconnect();
     }
+
+    public void stop() {
+        this.socket.disconnect();
+    }
 	
 	public void run() throws URISyntaxException, MalformedURLException {
 		this.socket = new SocketIO("http://stream.wikimedia.org/rc");
