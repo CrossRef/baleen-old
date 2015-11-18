@@ -2,13 +2,13 @@
 
 Collect live citations of DOIs, display, store and push to Crossref DET. Consumes live stream from Wikipedia. Modular, for future sources.
 
-Live stream of edits at http://wikipedia.labs.crossref.org .
-
 ## Source types
 
 ### Wikipedia
 
-Watches the RCStream (Recent Changes Stream) for edits and extracts the DOIs. Watches the Recent Changes stream, fetches old and new versions, compares for DOI citations and uncitations. Note that this source engages in a large amount of network activity!
+Live stream of edits: http://wikipedia.labs.crossref.org
+
+Watches all Wikimedia sites (or sites of your choosing) for edits and extracts the DOIs. Watches the Recent Changes stream, fetches old and new versions, compares for DOI citations and uncitations. Note that this source engages in a large amount of network activity!
 
 ## Installation
 
