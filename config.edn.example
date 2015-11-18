@@ -2,7 +2,6 @@
  :db-username ""
  :db-password ""
  :db-name ""
-
- ; Only one source may be enabled at once.
  :enabled-source :wikimedia
- :source-config {:wikimedia {:subscribe "*"}}}
+ :source-config {:wikimedia {:subscribe "en.wikipedia.org"}
+                 :gnip {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}
