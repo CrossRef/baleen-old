@@ -40,7 +40,8 @@
 
 
 (defn- shift-bucket [buckets]
-  (conj (drop-last buckets) 0))
+  ; Conj will create a lazy seq and blow up the stack eventually. Realize the bucket list each time.
+  (apply list (conj (drop-last buckets) 0)))
 
 (defn- inc-bucket [buckets]
   (conj (rest buckets) (inc (first buckets))))
@@ -94,7 +95,7 @@
       ((:restart-f @state/source))))
 
 (defn boot []
-  {:pre @state/source}
+  {:pre [@state/source]}
   (let [source @state/source
         process-f (:process-f source)]
 

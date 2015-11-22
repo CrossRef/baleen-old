@@ -48,7 +48,7 @@
 
 (defn -main
   [& args]
-  (when-not sources (:enabled-source config)
+  (when-not (sources (:enabled-source config))
     (error "Didn't recognise source" (:enabled-source config)))
 
   (info "Using " (:enabled-source config))
