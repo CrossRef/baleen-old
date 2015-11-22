@@ -19,13 +19,15 @@
 
 (defn fetch-page-dois
   "Fetch the set of DOIs that are mentioned in the given URL."
-  [url title revision]
+  [url revision]
   ; If we've fetched this before it's ready, we get an empty page with this link.
   ; It's differenet for each language, so the only common thing is '/delete'.
   ; Keep trying until we get something.
   (try-try-again {:sleep 5000 :tries 10 :return? :truthy?}
       (fn []
-        (let [result (http/get url {:query-params {:title title :oldid revision}})
+        ; Mediawiki allows serving by revision ID, title is not required.
+        ; As some character encoding inconsistencies crop up from time to time in the live stream, this reduces the chance of error. 
+        (let [result (http/get url {:query-params {:oldid revision}})
               body (or (:body @result) "")
               links (util/extract-links-from-html body)
               has-deleted-link (some (fn [link]
@@ -34,17 +36,14 @@
               dois (util/filter-doi-links links)
               fail (and (empty? dois) has-deleted-link quotes-revision)]
 
-          (when fail (info "Failed" title revision "retry" ))
+          (when fail (info "Failed" url revision "retry" ))
           (when-not fail dois)))))
 
-(defn doi-changes [server-name title old-revision new-revision]
+(defn doi-changes [server-name old-revision new-revision]
   (let [fetch-url (str "https://" server-name "/w/index.php")
-        page-url (str "https://" server-name "/w/index.php?title=" (URLEncoder/encode title "UTF-8"))
-        old-dois (fetch-page-dois fetch-url title old-revision)
-        new-dois (fetch-page-dois fetch-url title new-revision)
-        
-
-        added-dois  (difference new-dois old-dois)
+        old-dois (fetch-page-dois fetch-url old-revision)
+        new-dois (fetch-page-dois fetch-url new-revision)
+        added-dois (difference new-dois old-dois)
         removed-dois (difference old-dois new-dois)]
   [added-dois removed-dois]))
 
@@ -62,7 +61,7 @@
     ; This may not be a revision of a page. Ignore if there isn't revision information.
     (when (and (= event-type "edit")
                server-url title old-revision new-revision)  
-      (let [[added-dois removed-dois] (doi-changes server-name title old-revision new-revision)
+      (let [[added-dois removed-dois] (doi-changes server-name old-revision new-revision)
             fetch-url (str "https://" server-name "/w/index.php")
               ; this method is private but this is better than copy-pasting.
               url (str fetch-url "?" (#'http/query-string {:title title}))]
