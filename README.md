@@ -40,5 +40,5 @@ Each source will re-connect if it becomes disconnected. If the program crashes i
 
 Copyright © 2015 Crossref
 
-Distributed under the Eclipse Public License either version 1.0 or (at
+Distributed under the [Eclipse Public License](https://www.eclipse.org/legal/epl-v10.html) either version 1.0 or (at
 your option) any later version.
