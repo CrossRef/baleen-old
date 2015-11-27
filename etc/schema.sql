@@ -5,7 +5,8 @@ CREATE TABLE citation_event (
   date DATETIME NOT NULL,
   url VARCHAR(4096),
   action VARCHAR(128),
-  pushed BOOLEAN NOT NULL DEFAULT FALSE
+  pushed BOOLEAN NOT NULL DEFAULT FALSE,
+  flagged BOOLEAN NOT NULL DEFAULT FALSE,
 ) ENGINE innodb CHARACTER SET utf8mb4;
 
 CREATE UNIQUE INDEX event_key ON citation_event(event_key(190));

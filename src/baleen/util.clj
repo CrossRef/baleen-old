@@ -2,9 +2,9 @@
   (:import [java.net URLDecoder URL MalformedURLException])
   (:require [net.cgrand.enlive-html :as html])
   (:require [clojure.string :as string]))
-
-(defn extract-doi-from-url [text]
-  "Convert a link, as found in HTML, to a DOI. Accepts protocol-relative URLs."
+      
+(defn href-to-url [text]
+  "Convert an href from an <a>, as found in HTML, to a URL. Accepts protocol-relative URLs."
   (when text
     ; If we get non-URL things, like fragments, skip.
     (try 
@@ -13,27 +13,41 @@
                     (.startsWith text "//") (str "http:" text)
                     (.startsWith text "http:") text
                     (.startsWith text "https:") text
-                    ; relative URLs can't be DOIs. ignore.
+                    ; Ignore relative URLs, as they can't be DOIs or publisher links.
                     :default nil)]
-      (let [url (new URL (URLDecoder/decode url-text "UTF-8"))
-            host (.getHost url)
+      (new URL (URLDecoder/decode url-text "UTF-8")))
+    (catch MalformedURLException e)
+    (catch IllegalArgumentException e))))
+    
+(defn is-doi-url?
+  "If the URL is a DOI, return the DOI as a string."
+  [url-string]
+
+  (let [url (href-to-url url-string)]
+    (when url 
+      (let [host (.getHost url)
             url-path (.getPath url)
+            ; Drop leading slash.
             url-path (when-not (string/blank? url-path) (subs url-path 1))
             likely-doi (and (.contains host "doi.org")
                             (.startsWith url-path "10."))]
-      
-      (when likely-doi url-path)))
+        (when likely-doi url-path)))))
+    
+(defn extract-a-hrefs-from-html [input]
+    (let [links (html/select (html/html-snippet input) [:a])
+          hrefs (keep #(-> % :attrs :href) links)]
+      (set hrefs)))
 
-    (catch MalformedURLException e)
+(defn text-fragments-from-html [input]
+  (string/join " "
+    (-> input
+    (html/html-snippet)
+    (html/select [:body html/text-node])
+    (html/transform [:script] nil)
+    (html/texts))))
 
-    (catch IllegalArgumentException e
-      (locking *out* (prn "MALFORMED" (str e)))))))
-
-(defn extract-links-from-html [input]
-    (let [links (html/select (html/html-snippet input) [:a])]
-      (set links)))
-
-(defn filter-doi-links [links]
-  (let [doi-links (keep #(-> % :attrs :href extract-doi-from-url) links)]
-    (set doi-links)))
-
+(defn remove-all
+  "Remove a sequence of strings from a string."
+  [text dois]
+  (reduce (fn [text doi]          
+            (.replace text doi "")) text dois))

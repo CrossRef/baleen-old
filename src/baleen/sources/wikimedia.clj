@@ -16,36 +16,59 @@
   (:require [clojure.tools.logging :refer [error info]]
             [clojure.set :refer [difference]])
   (:require [overtone.at-at :as at-at]))
-
+  
 (defn fetch-page-dois
-  "Fetch the set of DOIs that are mentioned in the given URL."
+  "Fetch the set of DOIs that are mentioned in the given URL.
+  Also flag up the presence of DOIs in text that aren't linked."
   [url revision]
   ; If we've fetched this before it's ready, we get an empty page with this link.
   ; It's differenet for each language, so the only common thing is '/delete'.
   ; Keep trying until we get something.
   (try-try-again {:sleep 5000 :tries 10 :return? :truthy?}
       (fn []
+
         ; Mediawiki allows serving by revision ID, title is not required.
         ; As some character encoding inconsistencies crop up from time to time in the live stream, this reduces the chance of error. 
         (let [result (http/get url {:query-params {:oldid revision}})
-              body (or (:body @result) "")
-              links (util/extract-links-from-html body)
-              has-deleted-link (some (fn [link]
-                                            (when-let [href (-> link :attrs :href)] (.contains href "/delete")))  links)
-              quotes-revision (.contains body (str revision))
-              dois (util/filter-doi-links links)
-              fail (and (empty? dois) has-deleted-link quotes-revision)]
 
+              body (or (:body @result) "")
+
+              hrefs (util/extract-a-hrefs-from-html body)
+
+              ; When the diff isn't available, there's no categorical way to tell. 
+              ; Clues include a link containing '/delete'
+              has-deleted-link (some (fn [url]
+                                       (.contains url "/delete")) hrefs)
+
+              ; And a mention of the revision number in question.
+              quotes-revision (.contains body (str revision))
+
+              dois (set (keep util/is-doi-url? hrefs))
+
+              fail (and (empty? dois) has-deleted-link quotes-revision)
+
+              ; Get the body text i.e. only visible stuff, not a href links.
+              body-text (util/text-fragments-from-html body)
+
+              ; Remove the DOIs that we already found.
+              body-text-without-dois (util/remove-all body-text dois)
+
+              ; As we only want to flag the existence of non-linked DOIs for later investigation,
+              ; we only need to capture the prefix.
+              unlinked-doi-prefixes (re-seq #"10\.\d\d\d+/" body-text-without-dois)
+
+              num-unlinked-dois (count unlinked-doi-prefixes)]
+              
           (when fail (info "Failed" url revision "retry" ))
-          (when-not fail dois)))))
+          (when-not fail [dois num-unlinked-dois])))))
 
 (defn doi-changes [server-name old-revision new-revision]
   (let [fetch-url (str "https://" server-name "/w/index.php")
-        old-dois (fetch-page-dois fetch-url old-revision)
-        new-dois (fetch-page-dois fetch-url new-revision)
+        [old-dois _] (fetch-page-dois fetch-url old-revision)
+        [new-dois num-unlinked-dois] (fetch-page-dois fetch-url new-revision)
         added-dois (difference new-dois old-dois)
         removed-dois (difference old-dois new-dois)]
-  [added-dois removed-dois]))
+  [added-dois removed-dois num-unlinked-dois]))
 
 (defn process [worker-id args]
   (let [arg (first args)
@@ -61,21 +84,28 @@
     ; This may not be a revision of a page. Ignore if there isn't revision information.
     (when (and (= event-type "edit")
                server-url title old-revision new-revision)  
-      (let [[added-dois removed-dois] (doi-changes server-name old-revision new-revision)
+      (let [[added-dois removed-dois num-unlinked-dois] (doi-changes server-name old-revision new-revision)
             fetch-url (str "https://" server-name "/w/index.php")
               ; this method is private but this is better than copy-pasting.
               url (str fetch-url "?" (#'http/query-string {:title title}))]
+            
+            ; When there are any unlinked DOIs, fire a flagged event. This can be picked up by another tool to investigate.
+            ; Can be nil if there was an error in retrieval.
+            (when (and num-unlinked-dois (> num-unlinked-dois 0))
+              (let [event-key (json/write-str [old-revision new-revision "" title server-name "has-unlinked"])]
+                (events/fire-citation event-key "" date url "cite" true)))
+              
             (when (or (not-empty added-dois) (not-empty removed-dois))
               (reset! state/most-recent-citation (clj-time/now)))
 
             ; Broadcast this to all listeners.
             (doseq [doi added-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "cite"])]
-                (events/fire-citation event-key doi date url "cite")))
+                (events/fire-citation event-key doi date url "cite" false)))
 
             (doseq [doi removed-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
-                (events/fire-citation event-key doi date url "uncite")))))))
+                (events/fire-citation event-key doi date url "uncite" false)))))))
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
 (def server-names {

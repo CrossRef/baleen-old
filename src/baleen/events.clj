@@ -18,12 +18,13 @@
 
 (defn get-citations-page [from-id]
   (if from-id
-    (k/select db/citation-event (k/where (< :id from-id)) (k/order :id :DESC) (k/limit page-size))
-    (k/select db/citation-event (k/order :id :DESC) (k/limit page-size))))
+    (k/select db/citation-event (k/where (< :id from-id)) (k/where {:flagged false}) (k/order :id :DESC) (k/limit page-size))
+    (k/select db/citation-event (k/order :id :DESC) (k/where {:flagged false}) (k/limit page-size))))
 
 (defn- citation-count-for-period [[end start]]
   (->
     (k/select db/citation-event (k/aggregate (count :*) :cnt)
+      (k/where {:flagged false})
       (k/where (>= :date (coerce/to-sql-time start)))
       (k/where (< :date (coerce/to-sql-time end))))
     first
@@ -56,7 +57,7 @@
 
 (defn fire-citation
   "Fire a citation event"
-  [event-key doi date url action]
+  [event-key doi date url action flagged]
 
   ; Citation counts will come in more or less sequentially.
   ;If they aren't, it'll be because of high throughput so it won't matter if this is a few ms out of date anyway;
@@ -65,7 +66,7 @@
 
   ; We expect duplicates when running redundant instances. Ignore these errors.
   (try 
-    (k/insert db/citation-event (k/values {:event-key event-key :doi doi :date date :url url :action action}))
+    (k/insert db/citation-event (k/values {:event-key event-key :doi doi :date date :url url :action action :flagged flagged}))
     (catch com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException _ nil))
 
   ; Broadcast to all websocket listeners.

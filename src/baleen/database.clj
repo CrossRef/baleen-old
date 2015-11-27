@@ -35,7 +35,9 @@
             ; Twitter: tweet, retweet
             :action
             ; Has this been pushed upstream?
-            :pushed)
+            :pushed
+            ; Has this been flagged?
+            :flagged)
    (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
    (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
 

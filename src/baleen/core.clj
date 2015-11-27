@@ -12,7 +12,9 @@
   {:wikimedia {:vocab {:title "Wikipedia DOI citation live stream"
                        :input-count-label "Wikipedia edits"
                        :citation-count-label "DOI citation events"}
+
                ; With 20 workers, the size of the backlog tends to hang around the zero mark.
+               ; But having some headroom can't hurt.
                :num-workers 50
 
                :input-bucket-time 5000
