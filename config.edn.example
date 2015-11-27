@@ -2,6 +2,6 @@
  :db-username ""
  :db-password ""
  :db-name ""
- :enabled-source :wikimedia
- :source-config {:wikimedia {:subscribe "en.wikipedia.org"}
-                 :gnip {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}
+ :enabled-source :wikimedia-dois
+ :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}
+                 :gnip-dois {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}

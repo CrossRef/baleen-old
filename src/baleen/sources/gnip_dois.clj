@@ -1,4 +1,4 @@
-(ns baleen.sources.gnip
+(ns baleen.sources.gnip-dois
   (:require [clj-time.core :as clj-time])
   (:require [clojure.data.json :as json])
   (:require [baleen.database :as db]

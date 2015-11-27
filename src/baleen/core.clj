@@ -1,7 +1,7 @@
 (ns baleen.core
   (:require [baleen.state :as state]
-            [baleen.sources.wikimedia :as wikimedia]
-            [baleen.sources.gnip :as gnip]
+            [baleen.sources.wikimedia-dois :as wikimedia-dois]
+            [baleen.sources.gnip-dois :as gnip-dois]
             [baleen.server :as server]
             [baleen.events :as events])
   (:require [crossref.util.config :refer [config]])
@@ -9,7 +9,7 @@
   (:require [clojure.tools.logging :refer [error info]]))
 
 (def sources
-  {:wikimedia {:vocab {:title "Wikipedia DOI citation live stream"
+  {:wikimedia-dois {:vocab {:title "Wikipedia DOI citation live stream"
                        :input-count-label "Wikipedia edits"
                        :citation-count-label "DOI citation events"}
 
@@ -23,14 +23,14 @@
                :num-input-buckets 200
                :num-citation-buckets 200
 
-               :start-f wikimedia/start
-               :export-f wikimedia/export
-               :process-f wikimedia/process
+               :start-f wikimedia-dois/start
+               :export-f wikimedia-dois/export
+               :process-f wikimedia-dois/process
 
                :watchdog-time 10000
-               :restart-f wikimedia/restart}
+               :restart-f wikimedia-dois/restart}
 
-   :gnip {:vocab {:title "Tweets mentioning DOIs live stream"
+   :gnip-dois {:vocab {:title "Tweets mentioning DOIs live stream"
                   :input-count-label "Tweets"
                   :citation-count-label "DOI mentions"}
           :num-workers 50
@@ -41,12 +41,12 @@
           :num-input-buckets 200
           :num-citation-buckets 200
 
-          :start-f gnip/start
-          :export-f gnip/export
-          :process-f gnip/process
+          :start-f gnip-dois/start
+          :export-f gnip-dois/export
+          :process-f gnip-dois/process
 
           :watchdog-time 10000
-          :restart-f gnip/restart}})
+          :restart-f gnip-dois/restart}})
 
 (defn -main
   [& args]

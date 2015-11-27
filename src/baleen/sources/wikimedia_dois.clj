@@ -1,4 +1,4 @@
-(ns baleen.sources.wikimedia
+(ns baleen.sources.wikimedia-dois
   (:import [baleen RCStreamLegacyClient])
   (:import [java.net URLEncoder]
             [java.util.logging Logger Level])
@@ -425,7 +425,7 @@
 (def client (atom nil))
 
 (defn new-client []
-  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia :subscribe))]
+  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia-dois :subscribe))]
     (.run the-client)))
 
 (defn start []
