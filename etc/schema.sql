@@ -10,3 +10,4 @@ CREATE TABLE citation_event (
 ) ENGINE innodb CHARACTER SET utf8mb4;
 
 CREATE UNIQUE INDEX event_key ON citation_event(event_key(190));
+CREATE INDEX flagged on citation_event(flagged);
