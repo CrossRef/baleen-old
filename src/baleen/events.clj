@@ -17,6 +17,7 @@
 (def page-size 20)
 
 (defn get-citations-page [from-id]
+  ; Don't retrieve flagged entries, they're not intended for viewing.
   (if from-id
     (k/select db/citation-event (k/where (< :id from-id)) (k/where {:flagged false}) (k/order :id :DESC) (k/limit page-size))
     (k/select db/citation-event (k/order :id :DESC) (k/where {:flagged false}) (k/limit page-size))))
@@ -59,20 +60,23 @@
   "Fire a citation event"
   [event-key doi date url action flagged]
 
-  ; Citation counts will come in more or less sequentially.
-  ;If they aren't, it'll be because of high throughput so it won't matter if this is a few ms out of date anyway;
-  (reset! state/most-recent-citation date)
-  (swap! state/citation-count-buckets inc-bucket)
-
   ; We expect duplicates when running redundant instances. Ignore these errors.
   (try 
     (k/insert db/citation-event (k/values {:event-key event-key :doi doi :date date :url url :action action :flagged flagged}))
     (catch com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException _ nil))
 
-  ; Broadcast to all websocket listeners.
-  (let [exported (json/write-str ((:export-f @state/source) 0 event-key doi (str date) url action))]
-    (doseq [c @state/broadcast-channels]
-      (http-server/send! c exported))))
+  ; If this is a flag it's not destined to be shown for users (and won't be retrieved through /events either).
+  (when-not flagged
+
+    ; Citation counts will come in more or less sequentially.
+    ; If they aren't, it'll be because of high throughput so it won't matter if this is a few ms out of date anyway;
+    (reset! state/most-recent-citation date)
+    (swap! state/citation-count-buckets inc-bucket)
+
+    ; Broadcast to all websocket listeners.
+    (let [exported (json/write-str ((:export-f @state/source) 0 event-key doi (str date) url action))]
+      (doseq [c @state/broadcast-channels]
+        (http-server/send! c exported)))))
 
 (defn register-listener
   "Register a websocket listener."
@@ -130,5 +134,9 @@
     (dotimes [worker-id (:num-workers source)]
       (go 
         (loop []
-          (process-f worker-id (<! state/input-queue))
+          ; Don't allow an exception to crash the worker.
+          ; There are watchdogs and logging to take care of reporting and restarting.
+          (try 
+            (process-f worker-id (<! state/input-queue))
+            (catch Exception _ nil))
           (recur))))))

@@ -24,7 +24,7 @@
   ; If we've fetched this before it's ready, we get an empty page with this link.
   ; It's differenet for each language, so the only common thing is '/delete'.
   ; Keep trying until we get something.
-  (try-try-again {:sleep 5000 :tries 10 :return? :truthy?}
+  (try-try-again {:sleep 5000 :tries 5 :return? :truthy?}
       (fn []
 
         ; Mediawiki allows serving by revision ID, title is not required.
