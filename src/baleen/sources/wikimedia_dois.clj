@@ -58,7 +58,6 @@
               unlinked-doi-prefixes (re-seq #"10\.\d\d\d+/" body-text-without-dois)
 
               num-unlinked-dois (count unlinked-doi-prefixes)]
-              
           (when fail (info "Failed" url revision "retry" ))
           (when-not fail [dois num-unlinked-dois])))))
 

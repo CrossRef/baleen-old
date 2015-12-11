@@ -136,7 +136,9 @@
         (loop []
           ; Don't allow an exception to crash the worker.
           ; There are watchdogs and logging to take care of reporting and restarting.
-          (try 
-            (process-f worker-id (<! state/input-queue))
-            (catch Exception _ nil))
+          (let [item (<! state/input-queue)]
+            (swap! state/num-tied-up-workers inc)
+            (try 
+              (process-f worker-id item)
+              (swap! state/num-tied-up-workers dec))
           (recur))))))

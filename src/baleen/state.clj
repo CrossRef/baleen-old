@@ -9,7 +9,9 @@
 ; Info for selected source. Set at start-up.
 (defonce source (atom {}))
 
-(def input-buffer-size 200)
+(defonce num-tied-up-workers (atom 0))
+
+(def input-buffer-size 50)
 
 (defonce input-buffer (dropping-buffer input-buffer-size))
 (defonce input-queue (chan input-buffer))
