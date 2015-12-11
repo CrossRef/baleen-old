@@ -58,6 +58,7 @@
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
                                    :num-workers (:num-workers @state/source)
                                    :input-history @state/input-count-buckets
+                                   :processed-history @state/processed-count-buckets
                                    :citation-history @state/citation-count-buckets
                                    :recent-events (> (apply + (take 10 @state/input-count-buckets)) 0)})))
 

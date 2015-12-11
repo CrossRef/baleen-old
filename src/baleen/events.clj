@@ -107,6 +107,7 @@
   (info "Input buckets size " (:num-input-buckets source))
   ; Start with empty event buckets. They'll fill up soon enough.
   (reset! state/input-count-buckets (apply list (repeat (:num-input-buckets source) 0)))
+  (reset! state/processed-count-buckets (apply list (repeat (:num-input-buckets source) 0)))
 
   ; On load populate with previous data, if there is any.
   (info "Citation buckets size " (:num-citation-buckets source))
@@ -115,6 +116,7 @@
   ; Schedule the buckets to shift.
   (info "Set up bucket timers")
   (at-at/every (:input-bucket-time source) #(swap! state/input-count-buckets shift-bucket) state/at-at-pool)
+  (at-at/every (:input-bucket-time source) #(swap! state/processed-count-buckets shift-bucket) state/at-at-pool)
   (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
 
   ; Start delayed to let things populate.
@@ -143,6 +145,7 @@
               (process-f worker-id item)
               (catch Exception e (error (str "Exception " e))))
               (swap! state/num-tied-up-workers dec)
+              (swap! state/processed-count-buckets inc-bucket)
           (recur)))
           ; The loop should never end, so this point should never be reached.
           (swap! state/num-running-workers dec)))))

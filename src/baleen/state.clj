@@ -26,6 +26,7 @@
 (defonce most-recent-citation (atom nil))
 
 (defonce input-count-buckets (atom (list)))
+(defonce processed-count-buckets (atom (list)))
 (defonce citation-count-buckets (atom (list)))
 
 (defonce at-at-pool (at-at/mk-pool))

@@ -20,8 +20,8 @@
                :input-bucket-time 5000
                :citation-bucket-time 300000
 
-               :num-input-buckets 200
-               :num-citation-buckets 200
+               :num-input-buckets 100
+               :num-citation-buckets 100
 
                :start-f wikimedia-dois/start
                :export-f wikimedia-dois/export
@@ -38,8 +38,8 @@
           :input-bucket-time 5000
           :citation-bucket-time 300000
 
-          :num-input-buckets 200
-          :num-citation-buckets 200
+          :num-input-buckets 100
+          :num-citation-buckets 100
 
           :start-f gnip-dois/start
           :export-f gnip-dois/export
