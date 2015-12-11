@@ -52,6 +52,7 @@
                   (json/write-str {:backlog (count state/input-buffer)
                                    :backlog-limit state/input-buffer-size
                                    :num-tied-up-workers @state/num-tied-up-workers
+                                   :num-running-workers @state/num-running-workers
                                    :subscribers (count @state/broadcast-channels)
                                    :most-recent-input (when-let [x @state/most-recent-input] (str x))
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))

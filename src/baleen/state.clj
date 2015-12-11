@@ -9,7 +9,11 @@
 ; Info for selected source. Set at start-up.
 (defonce source (atom {}))
 
+; Number of workers who are busy working at this point in time.
 (defonce num-tied-up-workers (atom 0))
+
+; Number of workers who have been started but may be idle.
+(defonce num-running-workers (atom 0))
 
 (def input-buffer-size 50)
 

@@ -14,8 +14,8 @@
                        :citation-count-label "DOI citation events"}
 
                ; With 20 workers, the size of the backlog tends to hang around the zero mark.
-               ; But having some headroom can't hurt.
-               :num-workers 50
+               ; But having some headroom can't hurt, especially as there occasional slowdowns.
+               :num-workers 1024
 
                :input-bucket-time 5000
                :citation-bucket-time 300000

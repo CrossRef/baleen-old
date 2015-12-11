@@ -133,6 +133,7 @@
   (info "Start " (:num-workers source) " workers")
     (dotimes [worker-id (:num-workers source)]
       (go 
+        (swap! state/num-running-workers inc)
         (loop []
           ; Don't allow an exception to crash the worker.
           ; There are watchdogs and logging to take care of reporting and restarting.
@@ -140,5 +141,8 @@
             (swap! state/num-tied-up-workers inc)
             (try 
               (process-f worker-id item)
-              (swap! state/num-tied-up-workers dec))
-          (recur))))))
+              (catch Exception e (error (str "Exception " e))))
+              (swap! state/num-tied-up-workers dec)
+          (recur)))
+          ; The loop should never end, so this point should never be reached.
+          (swap! state/num-running-workers dec)))))
