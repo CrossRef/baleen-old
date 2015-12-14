@@ -69,11 +69,8 @@
         removed-dois (difference old-dois new-dois)]
   [added-dois removed-dois num-unlinked-dois]))
 
-(defn process [worker-id args]
-  (let [arg (first args)
-        arg-str (.toString arg)
-        data (json/read-str (.toString arg))
-        server-name (get data "server_name")
+(defn process [worker-id input-event-id data]
+  (let [server-name (get data "server_name")
         server-url (get data "server_url")
         title (get data "title")
         old-revision (get-in data ["revision" "old"])
@@ -92,7 +89,7 @@
             ; Can be nil if there was an error in retrieval.
             (when (and num-unlinked-dois (> num-unlinked-dois 0))
               (let [event-key (json/write-str [old-revision new-revision "" title server-name "has-unlinked"])]
-                (events/fire-citation event-key "" date url "cite" true)))
+                (events/fire-citation input-event-id event-key "" date url "cite" true)))
               
             (when (or (not-empty added-dois) (not-empty removed-dois))
               (reset! state/most-recent-citation (clj-time/now)))
@@ -100,11 +97,11 @@
             ; Broadcast this to all listeners.
             (doseq [doi added-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "cite"])]
-                (events/fire-citation event-key doi date url "cite" false)))
+                (events/fire-citation input-event-id event-key doi date url "cite" false)))
 
             (doseq [doi removed-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
-                (events/fire-citation event-key doi date url "uncite" false)))))))
+                (events/fire-citation input-event-id event-key doi date url "uncite" false)))))))
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
 (def server-names {
@@ -417,9 +414,12 @@
 
 (defn- callback [type-name args]
   ; Delay event to give a chance for Wikimedia servers to propagage edit.
-  (at-at/after 10000
-    #(events/fire-input args)
-    state/at-at-pool))
+  (let [arg (first args)
+        arg-str (.toString arg)
+        data (json/read-str (.toString arg))]
+    (at-at/after 10000
+      #(events/fire-input data)
+      state/at-at-pool)))
 
 (def client (atom nil))
 
@@ -440,8 +440,8 @@
 (defn restart []
   (info "Reconnect wikimedia...")
   (try
-    (.stop @client)
-    (catch Exception e (info "Error stoppping wikimedia " (str e))))
+    (when @client (.stop @client))
+    (catch Exception e (info "Error stopping wikimedia " (str e) (.printStackTrace e))))
   (info "Stopped old wikimedia client...")
   (start)
   (info "Reconnected wikimedia"))

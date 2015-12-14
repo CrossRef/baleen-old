@@ -25,6 +25,9 @@
             ; Wikipedia: JSON of [old-id, new-id, title, wiki-server, doi]
             ; Twitter: JSON of [tweet-id, doi]
             :event-key
+            ; The ID of the input event. Corresponds to an entry in input-event, which may or may not exist depending on the source.
+            ; Doesn't form part of the identity, as two instances may compete to insert the same citation event, but only one will win (with its own event id).
+            :input-event-id
             :doi
             :date
             ; ID of the citing entity in correct escaped URL format.
@@ -40,6 +43,9 @@
             :flagged)
    (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
    (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
+
+(k/defentity input-event
+  (k/fields :id :event-id :content))
 
 (defn heartbeat []
   ; This will either work or fail.

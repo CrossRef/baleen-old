@@ -16,6 +16,14 @@
 
 (def page-size 20)
 
+(Thread/setDefaultUncaughtExceptionHandler
+  (reify Thread$UncaughtExceptionHandler
+    (uncaughtException [_ thread throwable]
+      (error (.getMessage throwable))
+      (.printStackTrace throwable)
+      (System/exit 1))))
+
+
 (defn get-citations-page [from-id]
   ; Don't retrieve flagged entries, they're not intended for viewing.
   (if from-id
@@ -51,18 +59,20 @@
 (defn fire-input
   "Fire an incoming event."
   [event]
-  (>!! state/input-queue event)
-  (reset! state/most-recent-input (clj-time/now))
-  ; Increment the current count bucket.
-  (swap! state/input-count-buckets inc-bucket))
+  (let [instance-name (-> @state/config :instance-name)
+        input-event-id (str instance-name ":" (swap! state/next-event-id inc))]
+    (>!! state/input-queue [event input-event-id])
+    (reset! state/most-recent-input (clj-time/now))
+    ; Increment the current count bucket.
+    (swap! state/input-count-buckets inc-bucket)))
 
 (defn fire-citation
   "Fire a citation event"
-  [event-key doi date url action flagged]
+  [input-event-id event-key doi date url action flagged]
 
   ; We expect duplicates when running redundant instances. Ignore these errors.
   (try 
-    (k/insert db/citation-event (k/values {:event-key event-key :doi doi :date date :url url :action action :flagged flagged}))
+    (k/insert db/citation-event (k/values {:input-event-id input-event-id :event-key event-key :doi doi :date date :url url :action action :flagged flagged}))
     (catch com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException _ nil))
 
   ; If this is a flag it's not destined to be shown for users (and won't be retrieved through /events either).
@@ -139,10 +149,14 @@
         (loop []
           ; Don't allow an exception to crash the worker.
           ; There are watchdogs and logging to take care of reporting and restarting.
-          (let [item (<! state/input-queue)]
+          (let [[event input-event-id] (<! state/input-queue)]
             (swap! state/num-tied-up-workers inc)
             (try 
-              (process-f worker-id item)
+              
+              (when (:log-inputs @state/source)
+                (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event)})))
+
+              (process-f worker-id input-event-id event)
               (catch Exception e (error (str "Exception " e))))
               (swap! state/num-tied-up-workers dec)
               (swap! state/processed-count-buckets inc-bucket)

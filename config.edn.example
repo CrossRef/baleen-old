@@ -2,6 +2,7 @@
  :db-username ""
  :db-password ""
  :db-name ""
+ :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}
                  :gnip-dois {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}

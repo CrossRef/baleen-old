@@ -26,6 +26,7 @@ The Wikipedia Recent Changes stream uses an obsolete version of Socket.IO, so we
 Create `config.edn`, based on `config.edn.example`.
 
  - Include mysql connection information, select a source. 
+ - Give the instance an `isntance-name`. If there are two, give them different names.
  - Wikimedia
    - For development, for the `:subscribe` parameter choose a popular Wikimedia site such as "en.wikipedia.org"
    - For production, you can choose a wiki or `"*"` for all. Beware this results in heavy traffic!

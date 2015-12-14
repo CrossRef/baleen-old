@@ -28,7 +28,11 @@
                :process-f wikimedia-dois/process
 
                :watchdog-time 10000
-               :restart-f wikimedia-dois/restart}
+               :restart-f wikimedia-dois/restart
+
+               ; It doesn't make sense to log these inputs as the ratio of inputs to citiations is about 0.005
+               :log-inputs false
+             }
 
    :gnip-dois {:vocab {:title "Tweets mentioning DOIs live stream"
                   :input-count-label "Tweets"
@@ -46,7 +50,10 @@
           :process-f gnip-dois/process
 
           :watchdog-time 10000
-          :restart-f gnip-dois/restart}})
+          :restart-f gnip-dois/restart
+
+          ; Log inputs for later analysis. Ratio of input events to citations should be near to 1.
+          :log-inputs true}})
 
 (defn -main
   [& args]
@@ -55,6 +62,8 @@
 
   (info "Using " (:enabled-source config))
   (reset! state/source (get sources (:enabled-source config)))
+  (reset! state/config config)
+
   (info "Starting source")
   (events/boot)
   (info "Starting server")

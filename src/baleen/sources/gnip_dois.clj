@@ -18,7 +18,7 @@
   ; TODO
   nil)
 
-(defn process [worker-id args]
+(defn process [worker-id event-id args]
   (let [response (first args)
         data (json/read-str response)
         body (get-in data ["body"])
