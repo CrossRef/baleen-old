@@ -45,7 +45,9 @@
    (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
 
 (k/defentity input-event
-  (k/fields :id :event-id :content))
+  (k/fields :id :event-id :content :date)
+  (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
+  (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
 
 (defn heartbeat []
   ; This will either work or fail.

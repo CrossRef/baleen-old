@@ -49,7 +49,7 @@
           :export-f gnip-dois/export
           :process-f gnip-dois/process
 
-          :watchdog-time 10000
+          :watchdog-time (* 1000 60 60) ; 1hr
           :restart-f gnip-dois/restart
 
           ; Log inputs for later analysis. Ratio of input events to citations should be near to 1.

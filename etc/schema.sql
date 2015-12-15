@@ -22,6 +22,7 @@ CREATE INDEX flagged on citation_event(flagged);
 CREATE TABLE input_event (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   event_id VARCHAR(512),
+  date DATETIME NOT NULL,
   content TEXT
 );
 

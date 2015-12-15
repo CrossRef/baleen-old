@@ -1,0 +1,219 @@
+{
+    "id": "tag:search.twitter.com,2005:600699303225466880",
+    "objectType": "activity",
+    "actor": {
+        "objectType": "person",
+        "id": "id:twitter.com:63046977",
+        "link": "http://www.twitter.com/happycamper",
+        "displayName": "Emily S.",
+        "postedTime": "2009-08-05T05:46:48.000Z",
+        "image": "https://pbs.twimg.com/profile_images/561029571521159170/uIHj3rwp_normal.jpeg",
+        "summary": "Pathfinder",
+        "links": [
+            {
+                "href": null,
+                "rel": "me"
+            }
+        ],
+        "friendsCount": 480,
+        "followersCount": 147,
+        "listedCount": 4,
+        "statusesCount": 187,
+        "twitterTimeZone": "Mountain Time (US & Canada)",
+        "verified": false,
+        "utcOffset": "-21600",
+        "preferredUsername": "happycamper",
+        "languages": [
+            "en-gb"
+        ],
+        "favoritesCount": 97
+    },
+    "verb": "post",
+    "postedTime": "2015-05-19T16:27:28.000Z",
+    "generator": {
+        "displayName": "Twitter for  iPhone",
+        "link": "http://twitter.com"
+    },
+    "provider": {
+        "objectType": "service",
+        "displayName": "Twitter",
+        "link": "http://www.twitter.com"
+    },
+    "link": "http://twitter.com/happycamper/statuses/600699303225466880",
+    "body": "Check it out here @johnd  https://t.co/F4H2ikacfs",
+    "object": {
+        "objectType": "note",
+        "id": "object:search.twitter.com,2005:600699303225466880",
+        "summary": "Check it out here @johnd  https://t.co/F4H2ikacfs",
+        "link": "http://twitter.com/happycamper/statuses/600699303225466880",
+        "postedTime": "2015-05-19T16:27:28.000Z"
+    },
+    "favoritesCount": 0,
+    "location": {
+        "objectType": "place",
+        "displayName": "Boulder, CO",
+        "name": "Boulder",
+        "country_code": "United States",
+        "twitter_country_code": "US",
+        "link": "https://api.twitter.com/1.1/geo/id/fd70c22040963ac7.json",
+        "geo": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        -105.3017759,
+                        39.953552
+                    ],
+                    [
+                        -105.3017759,
+                        40.094411
+                    ],
+                    [
+                        -105.183597,
+                        40.094411
+                    ],
+                    [
+                        -105.183597,
+                        39.953552
+                    ]
+                ]
+            ]
+        },
+        "twitter_place_type": "city"
+    },
+    "twitter_entities": {
+        "hashtags": [],
+        "trends": [],
+        "urls": [
+            {
+                "url": "https://t.co/F4H2ikacfs",
+                "expanded_url": "https://twitter.com/twittermusic/status/600436537998897153",
+                "display_url": "twitter.com/twittermusic/s…",
+                "indices": [
+                    26,
+                    49
+                ]
+            }
+        ],
+        "user_mentions": [
+            {
+                "screen_name": "johnd",
+                "name": "John Demos",
+                "id": 408623049,
+                "id_str": "408623049",
+                "indices": [
+                    18,
+                    24
+                ]
+            }
+        ],
+        "symbols": []
+    },
+    "twitter_filter_level": "low",
+    "twitter_lang": "en",
+    "retweetCount": 0,
+    "gnip": {
+        "matching_rules": [
+            {
+                "value": "from:happycamper",
+                "tag": null
+            }
+        ],
+        "urls": [
+            {
+                "url": "https://t.co/F4H2ikacfs",
+                "expanded_url": "http://test.gnip.com/mock",
+                "expanded_status": 200
+            }
+        ],
+        "language": {
+            "value": "en"
+        }
+    },
+    "twitter_quoted_status": {
+        "id": "tag:search.twitter.com,2005:600436537998897153",
+        "objectType": "activity",
+        "actor": {
+            "objectType": "person",
+            "id": "id:twitter.com:373471064",
+            "link": "http://www.twitter.com/TwitterMusic",
+            "displayName": "Twitter Music",
+            "postedTime": "2011-09-14T16:50:47.000Z",
+            "image": "https://pbs.twimg.com/profile_images/378800000449287089/70dea90873e8a0f92fd582b4d04cfd4b_normal.png",
+            "summary": "Music related Tweets from around the world.",
+            "links": [
+                {
+                    "href": "http://music.twitter.com",
+                    "rel": "me"
+                }
+            ],
+            "friendsCount": 268,
+            "followersCount": 7481816,
+            "listedCount": 9384,
+            "statusesCount": 8254,
+            "twitterTimeZone": "Hawaii",
+            "verified": true,
+            "utcOffset": "-36000",
+            "preferredUsername": "TwitterMusic",
+            "languages": [
+                "en"
+            ],
+            "location": {
+                "objectType": "place",
+                "displayName": "Twitter HQ"
+            },
+            "favoritesCount": 928
+        },
+        "verb": "post",
+        "postedTime": "2015-05-18T23:03:20.000Z",
+        "generator": {
+            "displayName": "Twitter for Android",
+            "link": "http://twitter.com/download/android"
+        },
+        "provider": {
+            "objectType": "service",
+            "displayName": "Twitter",
+            "link": "http://www.twitter.com"
+        },
+        "link": "http://twitter.com/TwitterMusic/statuses/600436537998897153",
+        "body": "Don't worry if you missed the @RollingStones first-ever Twitter Q+A, because you can relive every moment here: https://t.co/7EQVlmjYWG",
+        "object": {
+            "objectType": "note",
+            "id": "object:search.twitter.com,2005:600436537998897153",
+            "summary": "Don't worry if you missed the @RollingStones first-ever Twitter Q+A, because you can relive every moment here: https://t.co/7EQVlmjYWG",
+            "link": "http://twitter.com/TwitterMusic/statuses/600436537998897153",
+            "postedTime": "2015-05-18T23:03:20.000Z"
+        },
+        "favoritesCount": 0,
+        "twitter_entities": {
+            "hashtags": [],
+            "trends": [],
+            "urls": [
+                {
+                    "url": "https://t.co/7EQVlmjYWG",
+                    "expanded_url": "https://twitter.com/TwitterMusic/timelines/600367899493142528",
+                    "display_url": "twitter.com/TwitterMusic/t…",
+                    "indices": [
+                        111,
+                        134
+                    ]
+                }
+            ],
+            "user_mentions": [
+                {
+                    "screen_name": "RollingStones",
+                    "name": "The Rolling Stones",
+                    "id": 217518231,
+                    "id_str": "217518231",
+                    "indices": [
+                        30,
+                        44
+                    ]
+                }
+            ],
+            "symbols": []
+        },
+        "twitter_filter_level": "low",
+        "twitter_lang": "en"
+    }
+}

@@ -131,7 +131,8 @@
 
   ; Start delayed to let things populate.
   (info "Delay watchdog")
-  (at-at/after 30000
+  ; One minute to allow things to connect plus the watchdog wait time.
+  (at-at/after (+ (* 1000 60) (:watchdog-time source))
     (fn []
         (info "Start watchdog time" (:watchdog-time source))
         (at-at/every (:watchdog-time source) watchdog state/at-at-pool)) state/at-at-pool)
@@ -152,9 +153,10 @@
           (let [[event input-event-id] (<! state/input-queue)]
             (swap! state/num-tied-up-workers inc)
             (try 
-              
+              (prn "LOG?" (:log-inputs @state/source))
               (when (:log-inputs @state/source)
-                (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event)})))
+                (prn "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
 
               (process-f worker-id input-event-id event)
               (catch Exception e (error (str "Exception " e))))

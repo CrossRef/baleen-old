@@ -1,0 +1,412 @@
+{
+    "id": "tag:search.twitter.com,2005:595648617588912128",
+    "objectType": "activity",
+    "actor": {
+        "objectType": "person",
+        "id": "id:twitter.com:2993982541",
+        "link": "http://www.twitter.com/jondee_test",
+        "displayName": "Test Demo",
+        "postedTime": "2015-01-24T00:12:53.000Z",
+        "image": "https://pbs.twimg.com/profile_images/593893018911907840/YM9oLru3_normal.png",
+        "summary": "this is a test account.",
+        "links": [
+            {
+                "href": null,
+                "rel": "me"
+            }
+        ],
+        "friendsCount": 43,
+        "followersCount": 2,
+        "listedCount": 0,
+        "statusesCount": 35,
+        "twitterTimeZone": "Mountain Time (US & Canada)",
+        "verified": false,
+        "utcOffset": "-21600",
+        "preferredUsername": "jondee_test",
+        "languages": [
+            "en"
+        ],
+        "location": {
+            "objectType": "place",
+            "displayName": "Denver, CO"
+        },
+        "favoritesCount": 0
+    },
+    "verb": "share",
+    "postedTime": "2015-05-05T17:57:51.000Z",
+    "generator": {
+        "displayName": "Twitter Web Client",
+        "link": "http://twitter.com"
+    },
+    "provider": {
+        "objectType": "service",
+        "displayName": "Twitter",
+        "link": "http://www.twitter.com"
+    },
+    "link": "http://twitter.com/jondee_test/statuses/595648617588912128",
+    "body": "RT @stevedz: More geo testing. Dinner with my son and  a Petrus 50/50  http://t.co/NtoHc3cOY4 from @BrouwerijDB is just a bonus! http://t.c…",
+    "object": {
+        "id": "tag:search.twitter.com,2005:593935592573898753",
+        "objectType": "activity",
+        "actor": {
+            "objectType": "person",
+            "id": "id:twitter.com:88777459",
+            "link": "http://www.twitter.com/stevedz",
+            "displayName": "Steven Dzilvelis",
+            "postedTime": "2009-11-09T22:17:48.000Z",
+            "image": "https://pbs.twimg.com/profile_images/3495413548/59af29182894424a4c977e981dbd55da_normal.jpeg",
+            "summary": "Sales Engineer @TwitterBoulder aka @Gnip, Dad/Husband, Coder, devops geek & baker. Almost all of tweets are my own.",
+            "links": [
+                {
+                    "href": "http://about.me/SteveDz",
+                    "rel": "me"
+                }
+            ],
+            "friendsCount": 344,
+            "followersCount": 228,
+            "listedCount": 12,
+            "statusesCount": 268,
+            "twitterTimeZone": "Mountain Time (US & Canada)",
+            "verified": false,
+            "utcOffset": "-21600",
+            "preferredUsername": "stevedz",
+            "languages": [
+                "en"
+            ],
+            "location": {
+                "objectType": "place",
+                "displayName": "Boulder, Colorado"
+            },
+            "favoritesCount": 24
+        },
+        "verb": "post",
+        "postedTime": "2015-05-01T00:30:54.000Z",
+        "generator": {
+            "displayName": "Twitter for Android",
+            "link": "http://twitter.com/download/android"
+        },
+        "provider": {
+            "objectType": "service",
+            "displayName": "Twitter",
+            "link": "http://www.twitter.com"
+        },
+        "link": "http://twitter.com/stevedz/statuses/593935592573898753",
+        "body": "More geo testing. Dinner with my son and  a Petrus 50/50  http://t.co/NtoHc3cOY4 from @BrouwerijDB is just a bonus! http://t.co/nHPh4YMdhN",
+        "object": {
+            "objectType": "note",
+            "id": "object:search.twitter.com,2005:593935592573898753",
+            "summary": "More geo testing. Dinner with my son and  a Petrus 50/50  http://t.co/NtoHc3cOY4 from @BrouwerijDB is just a bonus! http://t.co/nHPh4YMdhN",
+            "link": "http://twitter.com/stevedz/statuses/593935592573898753",
+            "postedTime": "2015-05-01T00:30:54.000Z"
+        },
+        "favoritesCount": 1,
+        "location": {
+            "objectType": "place",
+            "displayName": "Fate Brewing Company",
+            "name": "Fate Brewing Company",
+            "country_code": "United States",
+            "twitter_country_code": "US",
+            "link": "https://api.twitter.com/1.1/geo/id/07d9e920af882000.json",
+            "geo": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -105.24541854858398,
+                            40.01499435375046
+                        ],
+                        [
+                            -105.24541854858398,
+                            40.01499435375046
+                        ],
+                        [
+                            -105.24541854858398,
+                            40.01499435375046
+                        ],
+                        [
+                            -105.24541854858398,
+                            40.01499435375046
+                        ]
+                    ]
+                ]
+            },
+            "twitter_place_type": "poi"
+        },
+        "geo": {
+            "type": "Point",
+            "coordinates": [
+                40.013423,
+                -105.235281
+            ]
+        },
+        "twitter_entities": {
+            "hashtags": [],
+            "trends": [],
+            "urls": [
+                {
+                    "url": "http://t.co/NtoHc3cOY4",
+                    "expanded_url": "http://www.brouwerijdebrabandere.be/en/merken/petrus",
+                    "display_url": "brouwerijdebrabandere.be/en/merken/petr…",
+                    "indices": [
+                        58,
+                        80
+                    ]
+                }
+            ],
+            "user_mentions": [
+                {
+                    "screen_name": "BrouwerijDB",
+                    "name": "De Brabandere",
+                    "id": 322774299,
+                    "id_str": "322774299",
+                    "indices": [
+                        86,
+                        98
+                    ]
+                }
+            ],
+            "symbols": [],
+            "media": [
+                {
+                    "id": 593935482129518600,
+                    "id_str": "593935482129518593",
+                    "indices": [
+                        116,
+                        138
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                    "url": "http://t.co/nHPh4YMdhN",
+                    "display_url": "pic.twitter.com/nHPh4YMdhN",
+                    "expanded_url": "http://twitter.com/stevedz/status/593935592573898753/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "small": {
+                            "w": 340,
+                            "h": 453,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 600,
+                            "h": 800,
+                            "resize": "fit"
+                        },
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "large": {
+                            "w": 768,
+                            "h": 1024,
+                            "resize": "fit"
+                        }
+                    }
+                }
+            ]
+        },
+        "twitter_extended_entities": {
+            "media": [
+                {
+                    "id": 593935482129518600,
+                    "id_str": "593935482129518593",
+                    "indices": [
+                        116,
+                        138
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                    "url": "http://t.co/nHPh4YMdhN",
+                    "display_url": "pic.twitter.com/nHPh4YMdhN",
+                    "expanded_url": "http://twitter.com/stevedz/status/593935592573898753/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "small": {
+                            "w": 340,
+                            "h": 453,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 600,
+                            "h": 800,
+                            "resize": "fit"
+                        },
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "large": {
+                            "w": 768,
+                            "h": 1024,
+                            "resize": "fit"
+                        }
+                    }
+                }
+            ]
+        },
+        "twitter_filter_level": "low",
+        "twitter_lang": "en"
+    },
+    "favoritesCount": 0,
+    "twitter_entities": {
+        "hashtags": [],
+        "trends": [],
+        "urls": [
+            {
+                "url": "http://t.co/NtoHc3cOY4",
+                "expanded_url": "http://www.brouwerijdebrabandere.be/en/merken/petrus",
+                "display_url": "brouwerijdebrabandere.be/en/merken/petr…",
+                "indices": [
+                    71,
+                    93
+                ]
+            }
+        ],
+        "user_mentions": [
+            {
+                "screen_name": "stevedz",
+                "name": "Steven Dzilvelis",
+                "id": 88777459,
+                "id_str": "88777459",
+                "indices": [
+                    3,
+                    11
+                ]
+            },
+            {
+                "screen_name": "BrouwerijDB",
+                "name": "De Brabandere",
+                "id": 322774299,
+                "id_str": "322774299",
+                "indices": [
+                    99,
+                    111
+                ]
+            }
+        ],
+        "symbols": [],
+        "media": [
+            {
+                "id": 593935482129518600,
+                "id_str": "593935482129518593",
+                "indices": [
+                    139,
+                    140
+                ],
+                "media_url": "http://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                "media_url_https": "https://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                "url": "http://t.co/nHPh4YMdhN",
+                "display_url": "pic.twitter.com/nHPh4YMdhN",
+                "expanded_url": "http://twitter.com/stevedz/status/593935592573898753/photo/1",
+                "type": "photo",
+                "sizes": {
+                    "small": {
+                        "w": 340,
+                        "h": 453,
+                        "resize": "fit"
+                    },
+                    "medium": {
+                        "w": 600,
+                        "h": 800,
+                        "resize": "fit"
+                    },
+                    "thumb": {
+                        "w": 150,
+                        "h": 150,
+                        "resize": "crop"
+                    },
+                    "large": {
+                        "w": 768,
+                        "h": 1024,
+                        "resize": "fit"
+                    }
+                },
+                "source_status_id": 593935592573898800,
+                "source_status_id_str": "593935592573898753"
+            }
+        ]
+    },
+    "twitter_extended_entities": {
+        "media": [
+            {
+                "id": 593935482129518600,
+                "id_str": "593935482129518593",
+                "indices": [
+                    139,
+                    140
+                ],
+                "media_url": "http://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                "media_url_https": "https://pbs.twimg.com/media/CD4VLJfUkAEI4px.jpg",
+                "url": "http://t.co/nHPh4YMdhN",
+                "display_url": "pic.twitter.com/nHPh4YMdhN",
+                "expanded_url": "http://twitter.com/stevedz/status/593935592573898753/photo/1",
+                "type": "photo",
+                "sizes": {
+                    "small": {
+                        "w": 340,
+                        "h": 453,
+                        "resize": "fit"
+                    },
+                    "medium": {
+                        "w": 600,
+                        "h": 800,
+                        "resize": "fit"
+                    },
+                    "thumb": {
+                        "w": 150,
+                        "h": 150,
+                        "resize": "crop"
+                    },
+                    "large": {
+                        "w": 768,
+                        "h": 1024,
+                        "resize": "fit"
+                    }
+                },
+                "source_status_id": 593935592573898800,
+                "source_status_id_str": "593935592573898753"
+            }
+        ]
+    },
+    "twitter_filter_level": "low",
+    "twitter_lang": "en",
+    "retweetCount": 1,
+    "gnip": {
+        "urls": [
+            {
+                "url": "http://t.co/NtoHc3cOY4",
+                "expanded_url": "http://www.brouwerijdebrabandere.be/en/merken/petrus",
+                "expanded_status": 200
+            },
+            {
+                "url": "http://t.co/nHPh4YMdhN",
+                "expanded_url": "http://twitter.com/stevedz/status/593935592573898753/photo/1",
+                "expanded_status": 200
+            }
+        ],
+        "language": {
+            "value": "en"
+        },
+        "profileLocations": [
+            {
+                "objectType": "place",
+                "geo": {
+                    "type": "point",
+                    "coordinates": [
+                        -104.9847,
+                        39.73915
+                    ]
+                },
+                "address": {
+                    "country": "United States",
+                    "countryCode": "US",
+                    "locality": "Denver",
+                    "region": "Colorado",
+                    "subRegion": "Denver County"
+                },
+                "displayName": "Denver, Colorado, United States"
+            }
+        ]
+    }
+}

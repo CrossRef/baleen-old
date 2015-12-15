@@ -32,7 +32,6 @@ public class StreamingGnipConnection {
 
     try {
       connection = getConnection(this.streamUrl, this.username, this.password);
-
       inputStream = connection.getInputStream();
       int responseCode = connection.getResponseCode();
 
@@ -41,10 +40,7 @@ public class StreamingGnipConnection {
         String line = reader.readLine();
 
         while(line != null){
-          System.out.println(line);
-          
           this.callback.invoke(line);
-
           line = reader.readLine();
         }
       } else {
@@ -82,11 +78,7 @@ public class StreamingGnipConnection {
   }
 
   private static String createAuthHeader(String username, String password) throws UnsupportedEncodingException {
-    // BASE64Encoder encoder = new BASE64Encoder();
     String authToken = DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
-
-    // String authToken = username + ":" + password;
-    // //encoder.encode(authToken.getBytes());
     return "Basic " + authToken; 
   }
 }
