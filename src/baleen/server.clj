@@ -8,7 +8,8 @@
   (:require [compojure.core :refer [context defroutes GET ANY POST]]
             [compojure.handler :as handler]
             [compojure.route :as route])
-  (:require [ring.util.response :refer [redirect]])
+  (:require [ring.util.response :refer [redirect]]
+            [ring.middleware.basic-authentication :refer [wrap-basic-authentication]])
   (:require [liberator.core :refer [defresource resource]]
             [liberator.representation :refer [ring-response]])
   (:require [selmer.parser :refer [render-file cache-off!]]
@@ -26,7 +27,9 @@
 (def-service-check :events (fn [] (events/ok)))
 
 (selmer.parser/cache-off!)
-   
+
+(defn authenticated? [username password] (and (= username (:username config)) (= password (:password config))))
+
 ; Just serve up a blank page with JavaScript to pick up from event-types-socket.
 (defresource home
   []
@@ -90,7 +93,10 @@
 (def app
   (-> app-routes
       handler/site
-      (wrap-heartbeat)))
+      (wrap-heartbeat)
+      (#(if (get config :require-auth)
+        (wrap-basic-authentication % authenticated?)
+        %))))
 
 (defn start []
   (reset! state/server (run-server #'app {:port (:port config)})))

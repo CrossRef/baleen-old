@@ -26,6 +26,7 @@
                   [org.clojure/tools.logging "0.3.1"]
                   [overtone/at-at "1.2.0"]
                   [ring "1.3.2"]
+                  [ring-basic-authentication "1.0.5"]
                   [robert/bruce "0.8.0"]
                   [crossref/heartbeat "0.1.2"]]
 

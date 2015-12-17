@@ -2,6 +2,11 @@
  :db-username ""
  :db-password ""
  :db-name ""
+ 
+ :require-auth false
+ :username ""
+ :password ""
+
  :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}
