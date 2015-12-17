@@ -31,8 +31,7 @@
                :restart-f wikimedia-dois/restart
 
                ; It doesn't make sense to log these inputs as the ratio of inputs to citiations is about 0.005
-               :log-inputs false
-             }
+               :log-inputs false}
 
    :gnip-dois {:vocab {:title "Tweets mentioning DOIs live stream"
                   :input-count-label "Tweets"
@@ -55,6 +54,11 @@
           ; Log inputs for later analysis. Ratio of input events to citations should be near to 1.
           :log-inputs true}})
 
+(defn run []
+  (info "Starting server")
+  (server/start)
+  (info "Running"))
+
 (defn -main
   [& args]
   (when-not (sources (:enabled-source config))
@@ -66,6 +70,7 @@
 
   (info "Starting source")
   (events/boot)
-  (info "Starting server")
-  (server/start)
-  (info "Running"))
+
+  (condp = (first args)
+    "reprocess" (events/reprocess)
+    "run" (run)))

@@ -153,9 +153,9 @@
           (let [[event input-event-id] (<! state/input-queue)]
             (swap! state/num-tied-up-workers inc)
             (try 
-              (prn "LOG?" (:log-inputs @state/source))
               (when (:log-inputs @state/source)
-                (prn "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
                 (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
 
               (process-f worker-id input-event-id event)
@@ -165,3 +165,19 @@
           (recur)))
           ; The loop should never end, so this point should never be reached.
           (swap! state/num-running-workers dec)))))
+
+(defn reprocess
+  "Reprocess the logged data from all the logged inputs for the currently selected source."
+  []
+  (let [input-events (k/select db/input-event)]
+    (doseq [input-event input-events]
+      
+      (let [event-id (:id input-event)
+            worker-id 0
+            args (json/read-str (:content input-event))]
+
+        (info "Reprocess" event-id args)
+
+
+      (k/delete db/citation-event (k/where {:input-event-id (:id input-event)}))
+      ((:process-f @state/source) 0 event-id args)))))

@@ -19,6 +19,16 @@
   {"post" "tweeted"
    "share" "retweeted"})
 
+(defn extract-dois
+  "Given a url or two, extract and verify the DOI. Uses the 'DOI destinations' service."
+  [urls]
+  (keep (fn [url]
+    (try-try-again {:sleep 500 :tries 2}
+      (fn []
+        (let [response @(http/get "http://destinations.labs.crossref.org/guess-doi" {:query-params {:q url}})]
+          (when (= 200 (:status response))
+            (:body response)))))) urls))
+
 (defn extract-info
   "Take data structure from Gnip input and extract info."
   [input-line]
@@ -28,26 +38,31 @@
         body (get-in data ["body"])
         verb (get-in data ["verb"])
         posted-time (get-in data ["postedTime"])
+        
         ; Include both the expanded url and the original URL, one might be a DOI, or match our domain list.
-        urls (set (mapcat (fn [url-structure] [(get url-structure "url") (get url-structure "expanded_url")])(get-in data ["gnip" "urls"])))]
+        ; Look in both the value-added `gnip` and the `twitter_urls` section (latter looks more promising).
+        gnip-urls (mapcat (fn [url-structure]
+                            [(get url-structure "url") (get url-structure "expanded_url")]) (get-in data ["gnip" "urls"]))
+
+        twitter-urls (mapcat (fn [url-structure]
+                            [(get url-structure "url") (get url-structure "expanded_url")]) (get-in data ["twitter_entities" "urls"]))
+
+        urls (set (concat gnip-urls twitter-urls))
+
+        dois (set (extract-dois urls))]
     {:tweet-id id
      :tweet-url tweet-url
      :body body
      :verb verb
      :posted-time posted-time
-     :urls urls}))
-
-(defn extract-dois-from-urls [urls]
-  ; TODO implement. For trial we want to just pass through the URL that was found.
-  ; Optionally check against the list of member domains to filer only those that match.
-  (set urls))
+     :urls urls
+     :dois dois}))
 
 (defn process [worker-id event-id args]
-  (let [{tweet-id :tweet-id tweet-url :tweet-url body :body verb :very posted-time :posted-time urls :urls} (extract-info args)
-        dois (extract-dois-from-urls urls)]
+  (let [{tweet-id :tweet-id tweet-url :tweet-url body :body verb :verb posted-time :posted-time urls :urls dois :dois} (extract-info args)]
     (doseq [doi dois]
       (let [event-key (json/write-str [tweet-id doi verb body])]
-        (events/fire-citation event-key doi posted-time tweet-url verb)))))
+        (events/fire-citation event-id event-key doi posted-time tweet-url verb false)))))
 
 (defn export [id event-key doi date url action]
   (let [[tweet-id doi verb tweet-text] (json/read-str event-key)
