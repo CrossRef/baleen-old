@@ -27,8 +27,8 @@
 (defn get-citations-page [from-id]
   ; Don't retrieve flagged entries, they're not intended for viewing.
   (if from-id
-    (k/select db/citation-event (k/where (< :id from-id)) (k/where {:flagged false}) (k/order :id :DESC) (k/limit page-size))
-    (k/select db/citation-event (k/order :id :DESC) (k/where {:flagged false}) (k/limit page-size))))
+    (k/select db/citation-event (k/where (< :id from-id)) (k/where {:flagged false}) (k/order :date :DESC) (k/limit page-size))
+    (k/select db/citation-event (k/order :date :DESC) (k/where {:flagged false}) (k/limit page-size))))
 
 (defn- citation-count-for-period [[end start]]
   (->
