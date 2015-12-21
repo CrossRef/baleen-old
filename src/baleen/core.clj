@@ -56,6 +56,9 @@
 
 (defn run []
   (info "Starting server")
+  ; Allow server to run without colleting, e.g. to show historical data.
+  (when (:collect config)
+    (events/run))
   (server/start)
   (info "Running"))
 

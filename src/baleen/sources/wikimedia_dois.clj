@@ -16,7 +16,8 @@
   (:require [clojure.tools.logging :refer [error info]]
             [clojure.set :refer [difference]])
   (:require [overtone.at-at :as at-at]))
-  
+
+
 (defn fetch-page-dois
   "Fetch the set of DOIs that are mentioned in the given URL.
   Also flag up the presence of DOIs in text that aren't linked."

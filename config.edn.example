@@ -7,6 +7,9 @@
  :username ""
  :password ""
 
+ ; Should the instance start collecting or just serve?
+ :collect false
+
  :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}

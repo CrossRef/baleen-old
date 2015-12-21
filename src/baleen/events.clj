@@ -121,50 +121,54 @@
 
   ; On load populate with previous data, if there is any.
   (info "Citation buckets size " (:num-citation-buckets source))
-  (reset! state/citation-count-buckets (citation-history))
+  (reset! state/citation-count-buckets (citation-history))))
 
-  ; Schedule the buckets to shift.
-  (info "Set up bucket timers")
-  (at-at/every (:input-bucket-time source) #(swap! state/input-count-buckets shift-bucket) state/at-at-pool)
-  (at-at/every (:input-bucket-time source) #(swap! state/processed-count-buckets shift-bucket) state/at-at-pool)
-  (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
+(defn run
+  []
+  (let [source @state/source
+        process-f (:process-f source)]
+    ; Schedule the buckets to shift.
+    (info "Set up bucket timers")
+    (at-at/every (:input-bucket-time source) #(swap! state/input-count-buckets shift-bucket) state/at-at-pool)
+    (at-at/every (:input-bucket-time source) #(swap! state/processed-count-buckets shift-bucket) state/at-at-pool)
+    (at-at/every (:citation-bucket-time source) #(swap! state/citation-count-buckets shift-bucket) state/at-at-pool)
 
-  ; Start delayed to let things populate.
-  (info "Delay watchdog")
-  ; One minute to allow things to connect plus the watchdog wait time.
-  (at-at/after (+ (* 1000 60) (:watchdog-time source))
-    (fn []
-        (info "Start watchdog time" (:watchdog-time source))
-        (at-at/every (:watchdog-time source) watchdog state/at-at-pool)) state/at-at-pool)
+    ; Start delayed to let things populate.
+    (info "Delay watchdog")
+    ; One minute to allow things to connect plus the watchdog wait time.
+    (at-at/after (+ (* 1000 60) (:watchdog-time source))
+      (fn []
+          (info "Start watchdog time" (:watchdog-time source))
+          (at-at/every (:watchdog-time source) watchdog state/at-at-pool)) state/at-at-pool)
 
-  ; Start source ingesting into queue.
-  (info "Start source")
-  ((source :start-f))
+    ; Start source ingesting into queue.
+    (info "Start source")
+    ((@state/source :start-f))
 
 
-  ; Start workers processing queue.
-  (info "Start " (:num-workers source) " workers")
-    (dotimes [worker-id (:num-workers source)]
-      (go 
-        (swap! state/num-running-workers inc)
-        (loop []
-          ; Don't allow an exception to crash the worker.
-          ; There are watchdogs and logging to take care of reporting and restarting.
-          (let [[event input-event-id] (<! state/input-queue)]
-            (swap! state/num-tied-up-workers inc)
-            (try 
-              (when (:log-inputs @state/source)
-                (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
-                ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
-                (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
+    ; Start workers processing queue.
+    (info "Start " (:num-workers source) " workers")
+      (dotimes [worker-id (:num-workers source)]
+        (go 
+          (swap! state/num-running-workers inc)
+          (loop []
+            ; Don't allow an exception to crash the worker.
+            ; There are watchdogs and logging to take care of reporting and restarting.
+            (let [[event input-event-id] (<! state/input-queue)]
+              (swap! state/num-tied-up-workers inc)
+              (try 
+                (when (:log-inputs @state/source)
+                  (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                  ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
+                  (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
 
-              (process-f worker-id input-event-id event)
-              (catch Exception e (error (str "Exception " e))))
-              (swap! state/num-tied-up-workers dec)
-              (swap! state/processed-count-buckets inc-bucket)
-          (recur)))
-          ; The loop should never end, so this point should never be reached.
-          (swap! state/num-running-workers dec)))))
+                (process-f worker-id input-event-id event)
+                (catch Exception e (error (str "Exception " e))))
+                (swap! state/num-tied-up-workers dec)
+                (swap! state/processed-count-buckets inc-bucket)
+            (recur)))
+            ; The loop should never end, so this point should never be reached.
+            (swap! state/num-running-workers dec)))))
 
 (defn reprocess
   "Reprocess the logged data from all the logged inputs for the currently selected source."
