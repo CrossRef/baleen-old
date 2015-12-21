@@ -19,6 +19,7 @@ CREATE TABLE citation_event (
 CREATE UNIQUE INDEX event_key ON citation_event(event_key(190));
 CREATE INDEX flagged on citation_event(flagged);
 CREATE INDEX date_order on citation_event(date);
+CREATE INDEX event_id on citation_event(input_event_id);
 
 CREATE TABLE input_event (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
