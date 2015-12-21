@@ -13,11 +13,21 @@
   (:require [robert.bruce :refer [try-try-again]])
   (:require [clojure.tools.logging :refer [error info]]
             [clojure.set :refer [difference]])
-  (:import [baleen StreamingGnipConnection]))
+  (:import [baleen StreamingGnipConnection]
+           [java.net URL]))
 
 (def verb-names
   {"post" "tweeted"
    "share" "retweeted"})
+
+; Immediately reject these domains. They often show up once per tweet. Because GNIP unrolls URLs, they're never useful.
+(def ignore-domains #{"t.co" "twitter.com" "goo.gl" "google.com" "shar.es" "bit.ly" "wp.me" "buff.ly" "ow.ly" "fb.me" "lnkd.in"})
+
+(defn ignore-domain? [url]
+  (try
+    (ignore-domains (.getHost (new URL url)))
+    ; We may get non-urls conceivably. Ignore these.
+    (catch Exception _ true)))
 
 (defn extract-dois
   "Given a url or two, extract and verify the DOI. Uses the 'DOI destinations' service."
@@ -47,9 +57,9 @@
         twitter-urls (mapcat (fn [url-structure]
                             [(get url-structure "url") (get url-structure "expanded_url")]) (get-in data ["twitter_entities" "urls"]))
 
-        urls (set (concat gnip-urls twitter-urls))
-
+        urls (set (remove ignore-domain? (concat gnip-urls twitter-urls)))
         dois (set (extract-dois urls))]
+
     {:tweet-id id
      :tweet-url tweet-url
      :body body
