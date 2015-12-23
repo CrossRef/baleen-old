@@ -10,6 +10,10 @@
  ; Should the instance start collecting or just serve?
  :collect false
 
+ ; DOI reverse guessing service. Can configure to run locally if you want.
+ :guess-doi-server "http://destinations.labs.crossref.org/guess-doi"
+
+
  :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}

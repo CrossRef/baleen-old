@@ -13,7 +13,7 @@ CREATE TABLE citation_event (
   url VARCHAR(4096),
   action VARCHAR(128),
   pushed BOOLEAN NOT NULL DEFAULT FALSE,
-  flagged BOOLEAN NOT NULL DEFAULT FALSE
+  flagged BOOLEAN NOT NULL DEFAULT FALSE,
 ) ENGINE innodb CHARACTER SET utf8mb4;
 
 CREATE UNIQUE INDEX event_key ON citation_event(event_key(190));
@@ -25,7 +25,8 @@ CREATE TABLE input_event (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   event_id VARCHAR(512),
   date DATETIME NOT NULL,
-  content TEXT
+  content TEXT,
+  has_citation BOOLEAN NOT NULL DEFAULT FALSE 
 );
 
 CREATE UNIQUE INDEX input_event_key ON input_event(event_id(190));

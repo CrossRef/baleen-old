@@ -41,13 +41,28 @@
             :pushed
             ; Has this been flagged?
             :flagged)
-   (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
-   (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
+
+   (k/prepare (fn [item]
+                (if (:date item)
+                  (assoc item :date (coerce/to-sql-time (:date item)))
+                  item)))
+
+   (k/transform (fn [item]
+                  (if (:date item)
+                    (assoc item :date (coerce/from-sql-time (:date item)))
+                    item))))
 
 (k/defentity input-event
-  (k/fields :id :event-id :content :date)
-  (k/prepare (fn [item] (assoc item :date (coerce/to-sql-time (:date item)))))
-  (k/transform (fn [item] (assoc item :date (coerce/from-sql-time (:date item))))))
+  (k/fields :id :event-id :content :date :has-citation)
+  (k/prepare (fn [item]
+              (if (:date item)
+                (assoc item :date (coerce/to-sql-time (:date item)))
+                item)))
+
+ (k/transform (fn [item]
+                (if (:date item)
+                  (assoc item :date (coerce/from-sql-time (:date item)))
+                  item))))
 
 (defn heartbeat []
   ; This will either work or fail.

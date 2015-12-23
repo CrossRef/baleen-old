@@ -21,7 +21,7 @@
    "share" "retweeted"})
 
 ; Immediately reject these domains. They often show up once per tweet. Because GNIP unrolls URLs, they're never useful.
-(def ignore-domains #{"t.co" "twitter.com" "goo.gl" "google.com" "shar.es" "bit.ly" "wp.me" "buff.ly" "ow.ly" "fb.me" "lnkd.in"})
+(def ignore-domains #{"t.co" "twitter.com" "goo.gl" "google.com" "shar.es" "bit.ly" "wp.me" "buff.ly" "ow.ly" "fb.me" "lnkd.in" "bitly.com" "youtube.com"})
 
 (defn ignore-domain? [url]
   (try
@@ -29,13 +29,15 @@
     ; We may get non-urls conceivably. Ignore these.
     (catch Exception _ true)))
 
+(def guess-doi-server (:guess-doi-server config))
+
 (defn extract-dois
   "Given a url or two, extract and verify the DOI. Uses the 'DOI destinations' service."
   [urls]
   (keep (fn [url]
     (try-try-again {:sleep 500 :tries 2}
       (fn []
-        (let [response @(http/get "http://destinations.labs.crossref.org/guess-doi" {:query-params {:q url}})]
+        (let [response @(http/get guess-doi-server {:query-params {:q url}})]
           (when (= 200 (:status response))
             (:body response)))))) urls))
 

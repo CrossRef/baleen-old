@@ -74,6 +74,7 @@
   (try 
     (k/insert db/citation-event (k/values {:input-event-id input-event-id :event-key event-key :doi doi :date date :url url :action action :flagged flagged}))
     (catch com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException _ nil))
+  (k/update db/input-event (k/set-fields {:has-citation true}) (k/where {:event-id input-event-id}))
 
   ; If this is a flag it's not destined to be shown for users (and won't be retrieved through /events either).
   (when-not flagged
@@ -173,15 +174,19 @@
 (defn reprocess
   "Reprocess the logged data from all the logged inputs for the currently selected source."
   []
-  (let [input-events (k/select db/input-event)]
-    (doseq [input-event input-events]
-      
-      (let [event-id (:id input-event)
+  (let [cnt (atom 0)
+        input-events (k/select db/input-event)]
+    (dorun (pmap (fn [input-event]
+      (swap! cnt inc)
+      (let [event-id (:event-id input-event)
             worker-id 0
             args (json/read-str (:content input-event))]
 
-        (info "Reprocess" event-id args)
+        (info "Reprocess" event-id "done" @cnt)
 
+      (k/delete db/citation-event (k/where {:input-event-id event-id}))
+      
+      (k/update db/input-event (k/set-fields {:has-citation false}) (k/where {:event-id event-id}))
 
-      (k/delete db/citation-event (k/where {:input-event-id (:id input-event)}))
-      ((:process-f @state/source) 0 event-id args)))))
+      ((:process-f @state/source) 0 event-id args)))
+     input-events))))
