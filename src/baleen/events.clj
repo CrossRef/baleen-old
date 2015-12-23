@@ -122,7 +122,10 @@
 
   ; On load populate with previous data, if there is any.
   (info "Citation buckets size " (:num-citation-buckets source))
-  (reset! state/citation-count-buckets (citation-history))))
+  (reset! state/citation-count-buckets (citation-history))
+
+  (info "Booting source")
+  ((:boot-f source))))
 
 (defn run
   []

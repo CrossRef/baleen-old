@@ -13,6 +13,7 @@
  ; DOI reverse guessing service. Can configure to run locally if you want.
  :guess-doi-server "http://destinations.labs.crossref.org/guess-doi"
 
+ :member-domains-server "http://destinations.labs.crossref.org/data/full-domain-names.json"
 
  :instance-name "banana"
  :enabled-source :wikimedia-dois

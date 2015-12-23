@@ -428,6 +428,10 @@
   (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia-dois :subscribe))]
     (.run the-client)))
 
+(defn boot
+  "Always called to set things up."
+  [])
+
 (defn start []
   (info "Connect wikimedia...")
     ; The logger is mega-chatty (~50 messages per second at INFO). We have alternative ways of seeing what's going on.

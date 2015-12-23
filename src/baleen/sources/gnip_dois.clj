@@ -23,13 +23,29 @@
 ; Immediately reject these domains. They often show up once per tweet. Because GNIP unrolls URLs, they're never useful.
 (def ignore-domains #{"t.co" "twitter.com" "goo.gl" "google.com" "shar.es" "bit.ly" "wp.me" "buff.ly" "ow.ly" "fb.me" "lnkd.in" "bitly.com" "youtube.com"})
 
-(defn ignore-domain? [url]
-  (try
-    (ignore-domains (.getHost (new URL url)))
-    ; We may get non-urls conceivably. Ignore these.
-    (catch Exception _ true)))
+; These domains are always interesting.
+(def always-domains #{"doi.org" "dx.doi.org"})
 
 (def guess-doi-server (:guess-doi-server config))
+
+; Set of all member domains.
+(def member-domains (atom #{}))
+(defn fetch-member-domains []
+  (->> config :member-domains-server
+       http/get deref
+       :body json/read-str
+       set
+       (clojure.set/union always-domains)
+       (#(clojure.set/difference % ignore-domains))
+       (reset! member-domains)))
+
+(defn interested-in-url?
+  "Should a URL be followed? Keep only known member domains and DOIs."
+  [url]
+  (try
+    (@member-domains (.getHost (new URL url)))
+    ; We may get non-urls conceivably. Ignore these.
+    (catch Exception _ true)))
 
 (defn extract-dois
   "Given a url or two, extract and verify the DOI. Uses the 'DOI destinations' service."
@@ -59,7 +75,8 @@
         twitter-urls (mapcat (fn [url-structure]
                             [(get url-structure "url") (get url-structure "expanded_url")]) (get-in data ["twitter_entities" "urls"]))
 
-        urls (set (remove ignore-domain? (concat gnip-urls twitter-urls)))
+        potential-urls (concat gnip-urls twitter-urls)
+        urls (set (filter interested-in-url? potential-urls))
         dois (set (extract-dois urls))]
 
     {:tweet-id id
@@ -97,8 +114,13 @@
     (info "Callback wasn't empty:" input-line)
     (events/fire-input input-line)))
 
+(defn boot
+  "Always called to set things up."
+  []
+  (fetch-member-domains))
+
 (defn start []
-  (info "Starting GNIP")
+  (info "Starting GNIP")  
   (let [new-connection (new StreamingGnipConnection
                          (-> config :source-config :gnip :username)
                          (-> config :source-config :gnip :password)

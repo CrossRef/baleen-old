@@ -24,6 +24,7 @@
                :num-citation-buckets 100
 
                :start-f wikimedia-dois/start
+               :boot-f wikimedia-dois/boot
                :export-f wikimedia-dois/export
                :process-f wikimedia-dois/process
 
@@ -44,6 +45,7 @@
           :num-input-buckets 100
           :num-citation-buckets 100
 
+          :boot-f gnip-dois/boot
           :start-f gnip-dois/start
           :export-f gnip-dois/export
           :process-f gnip-dois/process
