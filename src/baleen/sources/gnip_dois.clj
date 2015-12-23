@@ -48,14 +48,14 @@
     (catch Exception _ true)))
 
 (defn extract-dois
-  "Given a url or two, extract and verify the DOI. Uses the 'DOI destinations' service."
-  [urls]
-  (keep (fn [url]
+  "Given a url or two or some text, extract and verify the DOI. Uses the 'DOI destinations' service."
+  [strings]
+  (keep (fn [string]
     (try-try-again {:sleep 500 :tries 2}
       (fn []
-        (let [response @(http/get guess-doi-server {:query-params {:q url}})]
+        (let [response @(http/get guess-doi-server {:query-params {:q string}})]
           (when (= 200 (:status response))
-            (:body response)))))) urls))
+            (:body response)))))) strings))
 
 (defn extract-info
   "Take data structure from Gnip input and extract info."
@@ -67,6 +67,7 @@
         verb (get-in data ["verb"])
         posted-time (get-in data ["postedTime"])
         
+        ; Get DOI from URLs.
         ; Include both the expanded url and the original URL, one might be a DOI, or match our domain list.
         ; Look in both the value-added `gnip` and the `twitter_urls` section (latter looks more promising).
         gnip-urls (mapcat (fn [url-structure]
@@ -77,7 +78,13 @@
 
         potential-urls (concat gnip-urls twitter-urls)
         urls (set (filter interested-in-url? potential-urls))
-        dois (set (extract-dois urls))]
+        url-dois (set (extract-dois urls))
+
+        ; Get DOI from text. The 'DOI destination' service handles the whole process.
+        text-dois (set (extract-dois [body]))
+
+        dois (set (concat url-dois text-dois))
+        ]
 
     {:tweet-id id
      :tweet-url tweet-url
