@@ -16,6 +16,9 @@
   (:import [baleen StreamingGnipConnection]
            [java.net URL]))
 
+; Very loose RE to see if we should send the full text of a tweet off to be extracted.
+(def doi-in-tweet-re #"10\.[0-9]+|doi.org|10/[a-zA-Z0-9]+")
+
 (def verb-names
   {"post" "tweeted"
    "share" "retweeted"})
@@ -50,12 +53,19 @@
 (defn extract-dois
   "Given a url or two or some text, extract and verify the DOI. Uses the 'DOI destinations' service."
   [strings]
-  (keep (fn [string]
-    (try-try-again {:sleep 500 :tries 2}
-      (fn []
-        (let [response @(http/get guess-doi-server {:query-params {:q string}})]
-          (when (= 200 (:status response))
-            (:body response)))))) strings))
+  (keep
+    (fn [string]
+      (try 
+        (try-try-again {:sleep 1000 :tries 5}
+          (fn []
+            (let [response @(http/get guess-doi-server {:query-params {:q string}})]
+              (cond
+                (= 200 (:status response)) (:body response)
+                (= 404 (:status response)) nil
+                :default (throw (new Exception "Can't reach server"))))))
+        ; If we really can't extract the DOIs, just continue. 
+        ; The data can be re-processed if a server goes down.
+        (catch Exception e nil))) strings))
 
 (defn extract-info
   "Take data structure from Gnip input and extract info."
@@ -81,7 +91,10 @@
         url-dois (set (extract-dois urls))
 
         ; Get DOI from text. The 'DOI destination' service handles the whole process.
-        text-dois (set (extract-dois [body]))
+        ; Cursory sanity check before sending full text off and wasting resources.
+        text-dois (if (re-find doi-in-tweet-re body)
+                    (set (extract-dois [body]))
+                    #{})
 
         dois (set (concat url-dois text-dois))
         ]
