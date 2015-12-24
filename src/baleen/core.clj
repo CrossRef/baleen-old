@@ -1,6 +1,7 @@
 (ns baleen.core
   (:require [baleen.state :as state]
             [baleen.sources.wikimedia-dois :as wikimedia-dois]
+            [baleen.sources.wikimedia-dois :as wikimedia-restbase-dois]
             [baleen.sources.gnip-dois :as gnip-dois]
             [baleen.server :as server]
             [baleen.events :as events])
@@ -9,7 +10,34 @@
   (:require [clojure.tools.logging :refer [error info]]))
 
 (def sources
-  {:wikimedia-dois {:vocab {:title "Wikipedia DOI citation live stream"
+  ; Exeperimental, uses Wikimedia RESTBase API.
+  {:wikimedia-restbase-dois {:vocab {:title "Wikipedia DOI citation live stream"
+                       :input-count-label "Wikipedia edits"
+                       :citation-count-label "DOI citation events"}
+
+               ; With 20 workers, the size of the backlog tends to hang around the zero mark.
+               ; But having some headroom can't hurt, especially as there occasional slowdowns.
+               :num-workers 1024
+
+               :input-bucket-time 5000
+               :citation-bucket-time 300000
+
+               :num-input-buckets 100
+               :num-citation-buckets 100
+
+               :start-f wikimedia-restbase-dois/start
+               :boot-f wikimedia-restbase-dois/boot
+               :export-f wikimedia-restbase-dois/export
+               :process-f wikimedia-restbase-dois/process
+
+               :watchdog-time 10000
+               :restart-f wikimedia-restbase-dois/restart
+
+               ; It doesn't make sense to log these inputs as the ratio of inputs to citiations is about 0.005
+               :log-inputs false}
+
+  ; Uses Wikimedia public pages.
+  :wikimedia-dois {:vocab {:title "Wikipedia DOI citation live stream"
                        :input-count-label "Wikipedia edits"
                        :citation-count-label "DOI citation events"}
 

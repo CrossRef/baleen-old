@@ -18,4 +18,5 @@
  :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}
+                 :wikimedia-restbase-dois {:subscribe "*" }
                  :gnip-dois {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}
