@@ -293,8 +293,8 @@
                 var maxEvent = Math.max.apply(null, eventHistory) || 1;
                 var eventMultiplier = maxValue / maxEvent;
                 var numEdits = 0;
-                if (eventHistory.length > 0) {
-                    numEdits = eventHistory[0];
+                if (eventHistory.length >= 1) {
+                    numEdits = eventHistory[1];
                 }
 
 //                eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
@@ -306,8 +306,8 @@
                 var citationMultiplier = maxValue / maxCitation;
                 var numCitations = 0;
 
-                if (citationHistory.length > 0) {
-                    numCitations = citationHistory[0];
+                if (citationHistory.length >= 1) {
+                    numCitations = citationHistory[1];
                 }
 
                 citationHistory = citationHistory.map(function(x) { return {value: x, height: Math.ceil(x * citationMultiplier)}});
@@ -316,7 +316,7 @@
                 var containerStyle = {"height": "100px", "width": "100%", "overflow": "hidden", "position": "relative"};
                 return <div className='row'>
                         <div className='col-md-6'>
-                            <div>{numEdits} <strong>{window.vocab['input-count-label']}</strong> in last <strong>5 seconds</strong></div>
+                            <div>{numEdits} <strong>{window.vocab['input-count-label']}</strong> in previous <strong>5 seconds</strong></div>
                             <div style={containerStyle}>
                             <small>{maxEvent}</small>
                             {eventHistory.map(function(c, i) {
@@ -332,7 +332,7 @@
                             
                         </div>
                         <div className='col-md-6'>
-                            {numCitations} <strong>{window.vocab['citation-count-label']}</strong> in the last <strong>5 minutes</strong><br />
+                            {numCitations} <strong>{window.vocab['citation-count-label']}</strong> in the previous <strong>5 minutes</strong><br />
                             <div style={containerStyle}>
                             <small>{maxCitation}</small>
                             {citationHistory.map(function(c, i) {
