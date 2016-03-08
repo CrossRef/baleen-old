@@ -14,7 +14,7 @@ Watches all Wikimedia sites (or sites of your choosing) for edits and extracts t
 
 Create mysql database with `etc/schema/sql`. 
 
-The Wikipedia Recent Changes stream uses an obsolete version of Socket.IO, so we need to use an unsupported version. To install:
+The Wikipedia Recent Changes stream uses an obsolete version of Socket.IO ([details](https://phabricator.wikimedia.org/T68232)), so we need to use an unsupported version. To install:
 
  - download and build per instructions at https://github.com/Gottox/socket.io-java-client
  - put the JAR in `lib`
