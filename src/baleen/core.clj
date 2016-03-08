@@ -1,7 +1,7 @@
 (ns baleen.core
   (:require [baleen.state :as state]
             [baleen.sources.wikimedia-dois :as wikimedia-dois]
-            [baleen.sources.wikimedia-dois :as wikimedia-restbase-dois]
+            [baleen.sources.wikimedia-restbase-dois :as wikimedia-restbase-dois]
             [baleen.sources.gnip-dois :as gnip-dois]
             [baleen.server :as server]
             [baleen.events :as events])
@@ -14,10 +14,6 @@
   {:wikimedia-restbase-dois {:vocab {:title "Wikipedia DOI citation live stream"
                        :input-count-label "Wikipedia edits"
                        :citation-count-label "DOI citation events"}
-
-               ; With 20 workers, the size of the backlog tends to hang around the zero mark.
-               ; But having some headroom can't hurt, especially as there occasional slowdowns.
-               :num-workers 1024
 
                :input-bucket-time 5000
                :citation-bucket-time 300000
@@ -41,10 +37,6 @@
                        :input-count-label "Wikipedia edits"
                        :citation-count-label "DOI citation events"}
 
-               ; With 20 workers, the size of the backlog tends to hang around the zero mark.
-               ; But having some headroom can't hurt, especially as there occasional slowdowns.
-               :num-workers 1024
-
                :input-bucket-time 5000
                :citation-bucket-time 300000
 
@@ -65,7 +57,6 @@
    :gnip-dois {:vocab {:title "Tweets mentioning DOIs live stream"
                   :input-count-label "Tweets"
                   :citation-count-label "DOI mentions"}
-          :num-workers 50
 
           :input-bucket-time 5000
           :citation-bucket-time 300000
@@ -87,8 +78,9 @@
 (defn run []
   (info "Starting server")
   ; Allow server to run without colleting, e.g. to show historical data.
-  (when (:collect config)
-    (events/run))
+  (if (:collect config)
+    (events/run)
+    (info "Not collecting events due to config"))
   (server/start)
   (info "Running"))
 

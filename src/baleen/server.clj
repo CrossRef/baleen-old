@@ -52,14 +52,10 @@
   []
   :available-media-types ["application/json"]
   :handle-ok (fn [ctx]
-                  (json/write-str {:backlog (count state/input-buffer)
-                                   :backlog-limit state/input-buffer-size
-                                   :num-tied-up-workers @state/num-tied-up-workers
-                                   :num-running-workers @state/num-running-workers
+                  (json/write-str {:num-tied-up-workers @state/num-tied-up-workers
                                    :subscribers (count @state/broadcast-channels)
                                    :most-recent-input (when-let [x @state/most-recent-input] (str x))
                                    :most-recent-citation (when-let [x @state/most-recent-citation] (str x))
-                                   :num-workers (:num-workers @state/source)
                                    :input-history @state/input-count-buckets
                                    :processed-history @state/processed-count-buckets
                                    :citation-history @state/citation-count-buckets

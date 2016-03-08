@@ -27,7 +27,7 @@
             status (:status @result)
             body (:body @result)]
         (when-not (#{200} status)
-          (prn url "=" status))
+          (error url "=" status))
 
         (when (#{200} status)
           body)))))
@@ -411,14 +411,16 @@
   (let [arg (first args)
         arg-str (.toString arg)
         data (json/read-str (.toString arg))]
-    (at-at/after 10000
+    ; Wait 1 minute.
+    (at-at/after (* 1000 60 1)
       #(events/fire-input data)
       state/at-at-pool)))
 
 (def client (atom nil))
 
 (defn new-client []
-  (let [the-client (new RCStreamLegacyClient callback (-> config :source-config :wikimedia-dois :subscribe))]
+  (let [subscribe-to (-> config :source-config :wikimedia-restbase-dois :subscribe)
+        the-client (new RCStreamLegacyClient callback subscribe-to)]
     (.run the-client)))
 
 (defn boot

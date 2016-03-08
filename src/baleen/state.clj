@@ -16,16 +16,6 @@
 ; Number of workers who are busy working at this point in time.
 (defonce num-tied-up-workers (atom 0))
 
-; Number of workers who have been started but may be idle.
-(defonce num-running-workers (atom 0))
-
-; Input buffer should be large enough to weather peaks and troughs of upstream server availability.
-; 10000 * 1KB = 10MB
-(def input-buffer-size 10000)
-
-(defonce input-buffer (dropping-buffer input-buffer-size))
-(defonce input-queue (chan input-buffer))
-
 (defonce broadcast-channels (atom #{}))
 
 (defonce most-recent-input (atom nil))

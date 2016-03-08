@@ -19,7 +19,7 @@
 (Thread/setDefaultUncaughtExceptionHandler
   (reify Thread$UncaughtExceptionHandler
     (uncaughtException [_ thread throwable]
-      (error (.getMessage throwable))
+      (error "Thread error:" (.getMessage throwable))
       (.printStackTrace throwable)
       (System/exit 1))))
 
@@ -32,7 +32,8 @@
 
 (defn- citation-count-for-period [[end start]]
   (->
-    (k/select db/citation-event (k/aggregate (count :*) :cnt)
+    (k/select :citation-event
+      (k/aggregate (count :*) :cnt)
       (k/where {:flagged false})
       (k/where (>= :date (coerce/to-sql-time start)))
       (k/where (< :date (coerce/to-sql-time end))))
@@ -59,10 +60,26 @@
 (defn fire-input
   "Fire an incoming event."
   [event]
-  (let [instance-name (-> @state/config :instance-name)
+  (let [process-f (:process-f @state/source)
+        instance-name (-> @state/config :instance-name)
         input-event-id (str instance-name ":" (swap! state/next-event-id inc))]
-    (>!! state/input-queue [event input-event-id])
+          
+          (future
+            (do
+              (swap! state/num-tied-up-workers inc)
+              (try 
+                (when (:log-inputs @state/source)
+                  (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                  ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
+                  (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
+                  (process-f -1 input-event-id event)
+                ;; If there's an exception we can't do anything about it.
+                (catch Exception e (error (str "Exception " e))))
+                (swap! state/num-tied-up-workers dec)
+              (swap! state/processed-count-buckets inc-bucket)))
+
     (reset! state/most-recent-input (clj-time/now))
+
     ; Increment the current count bucket.
     (swap! state/input-count-buckets inc-bucket)))
 
@@ -112,8 +129,7 @@
 
 (defn boot []
   {:pre [@state/source]}
-  (let [source @state/source
-        process-f (:process-f source)]
+  (let [source @state/source]
 
   (info "Input buckets size " (:num-input-buckets source))
   ; Start with empty event buckets. They'll fill up soon enough.
@@ -147,32 +163,7 @@
 
     ; Start source ingesting into queue.
     (info "Start source")
-    ((@state/source :start-f))
-
-
-    ; Start workers processing queue.
-    (info "Start " (:num-workers source) " workers")
-      (dotimes [worker-id (:num-workers source)]
-        (go 
-          (swap! state/num-running-workers inc)
-          (loop []
-            ; Don't allow an exception to crash the worker.
-            ; There are watchdogs and logging to take care of reporting and restarting.
-            (let [[event input-event-id] (<! state/input-queue)]
-              (swap! state/num-tied-up-workers inc)
-              (try 
-                (when (:log-inputs @state/source)
-                  (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
-                  ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
-                  (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
-
-                (process-f worker-id input-event-id event)
-                (catch Exception e (error (str "Exception " e))))
-                (swap! state/num-tied-up-workers dec)
-                (swap! state/processed-count-buckets inc-bucket)
-            (recur)))
-            ; The loop should never end, so this point should never be reached.
-            (swap! state/num-running-workers dec)))))
+    ((@state/source :start-f))))
 
 (defn reprocess
   "Reprocess the logged data from all the logged inputs for the currently selected source."
