@@ -288,19 +288,21 @@
 
             render: function() {
                 var maxValue = 100;
+                // How many values from event and citation history to show?
+                // Real display depends on the layout and will be lower.
+                var historySize = 100;
 
-                var eventHistory = this.state.status['input-history'];
-                var maxEvent = Math.max.apply(null, eventHistory) || 1;
+                var eventHistory = this.state.status['input-history'].slice(0,historySize;
+                var maxEvent = Math.max.apply(null, eventHistory, citationHistory.) || 1;
                 var eventMultiplier = maxValue / maxEvent;
                 var numEdits = 0;
                 if (eventHistory.length >= 1) {
                     numEdits = eventHistory[1];
                 }
 
-//                eventHistory = eventHistory.map(function(x) { return Math.ceil(x * eventMultiplier)});
                 eventHistory = eventHistory.map(function(x) { return {value: x, height: Math.ceil(x * eventMultiplier)}});
 
-                var citationHistory = this.state.status['citation-history'];
+                var citationHistory = this.state.status['citation-history'].slice(0,historySize);
                 
                 var maxCitation = Math.max.apply(null, citationHistory) || 1;
                 var citationMultiplier = maxValue / maxCitation;
