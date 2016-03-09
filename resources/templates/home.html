@@ -293,7 +293,7 @@
                 var historySize = 100;
 
                 var eventHistory = this.state.status['input-history'].slice(0,historySize);
-                var maxEvent = Math.max.apply(null, eventHistory, citationHistory.) || 1;
+                var maxEvent = Math.max.apply(null, eventHistory, citationHistory) || 1;
                 var eventMultiplier = maxValue / maxEvent;
                 var numEdits = 0;
                 if (eventHistory.length >= 1) {
