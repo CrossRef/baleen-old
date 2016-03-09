@@ -19,27 +19,24 @@
             [clojure.set :refer [difference]])
   (:require [overtone.at-at :as at-at]))
 
-(defn fetch-html [server-name title revision]
-  (try-try-again {:sleep 5000 :tries 5 :return? :truthy?}
-    (fn []
-      (let [url (str "https://" server-name "/api/rest_v1/page/html/" (URLEncoder/encode title) "/" revision)
-            result (http/get url)
-            status (:status @result)
-            body (:body @result)]
-        (when-not (#{200} status)
-          (error url "=" status))
-
-        (when (#{200} status)
-          body)))))
-
-(defn fetch-page-dois
-  "Fetch the set of DOIs that are mentioned in the given URL.
-  Also flag up the presence of DOIs in text that aren't linked."
+(defn build-restbase-url
+  "Build a URL that can be retrieved from RESTBase"
   [server-name title revision]
-  ; As some character encoding inconsistencies crop up from time to time in the live stream, this reduces the chance of error. 
-  (let [body (fetch-html server-name title revision)
+  (str "https://" server-name "/api/rest_v1/page/html/" (URLEncoder/encode title) "/" revision))
 
-        hrefs (util/extract-a-hrefs-from-html body)
+(defn build-canonical-url
+  "Build a canonical URL where the article can be accessed."
+  []
+
+
+  )
+
+(defn dois-from-body
+  "Fetch the set of DOIs that are mentioned in the body text.
+  Also flag up the presence of DOIs in text that aren't linked."
+  [body]
+  ; As some character encoding inconsistencies crop up from time to time in the live stream, this reduces the chance of error. 
+  (let [hrefs (util/extract-a-hrefs-from-html body)
 
         dois (set (keep util/is-doi-url? hrefs))
 
@@ -56,14 +53,15 @@
         num-unlinked-dois (count unlinked-doi-prefixes)]
     [dois num-unlinked-dois]))
 
-(defn doi-changes [server-name title old-revision new-revision]
-  (let [[old-dois _] (fetch-page-dois server-name title old-revision)
-        [new-dois num-unlinked-dois] (fetch-page-dois server-name title new-revision)
-        added-dois (difference new-dois old-dois)
-        removed-dois (difference old-dois new-dois)]
-  [added-dois removed-dois num-unlinked-dois]))
 
-(defn process [worker-id input-event-id data]
+(defn process
+  "Process a new input event by looking up old and new revisions."
+  ; Implemented using callbacks which are passed through http-kit. 
+  ; Previous implementation using futures that block on promises from http-kit pegged all CPUs at 100%. 
+  ; Previous implementation using channel and fixed number of workers that block on promises from http-kit don't scale to load (resource starvation).
+
+  ; Chaining has the effect of retrieving the first revision first (which is more likely to exist in RESTBase) giving a bit more time before the new one is fetched.
+  [worker-id input-event-id data]
   (let [server-name (get data "server_name")
         server-url (get data "server_url")
         title (get data "title")
@@ -71,13 +69,16 @@
         new-revision (get-in data ["revision" "new"])
         date (clj-time/now)
         event-type (get data "type")]
-    ; This may not be a revision of a page. Ignore if there isn't revision information.
-    (when (and (= event-type "edit")
-               server-url title old-revision new-revision)  
-      (let [[added-dois removed-dois num-unlinked-dois] (doi-changes server-name title old-revision new-revision)
-            
-            ; this method is private but this is better than copy-pasting.
-            url (str "https://" server-name "/w/index.php?" (#'http/query-string {:title title}))]
+    (http/get (build-restbase-url server-name title old-revision)
+      (fn [{old-status :status old-body :body}]
+        (http/get (build-restbase-url server-name title new-revision)
+          (fn [{new-status :status new-body :body}]
+             (when (and (= 200 old-status)) (= 200 new-status)
+              (let [[old-dois _] (dois-from-body old-body)
+                    [new-dois num-unlinked-dois] (dois-from-body new-body)
+                    added-dois (difference new-dois old-dois)
+                    removed-dois (difference old-dois new-dois)
+                    url (str "https://" server-name "/w/index.php?" (#'http/query-string {:title title}))]
             
             ; When there are any unlinked DOIs, fire a flagged event. This can be picked up by another tool to investigate.
             ; Can be nil if there was an error in retrieval.
@@ -95,7 +96,7 @@
 
             (doseq [doi removed-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
-                (events/fire-citation input-event-id event-key doi date url "uncite" false)))))))
+                (events/fire-citation input-event-id event-key doi date url "uncite" false)))))))))))
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
 (def server-names {

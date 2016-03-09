@@ -63,21 +63,14 @@
   (let [process-f (:process-f @state/source)
         instance-name (-> @state/config :instance-name)
         input-event-id (str instance-name ":" (swap! state/next-event-id inc))]
-          
-          (future
-            (do
-              (swap! state/num-tied-up-workers inc)
               (try 
-                (when (:log-inputs @state/source)
-                  (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
+                (when (:log-inputs @state/source) (info "INSERT" {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})
                   ; The event may be in any format. JSONize it. For the extant sources, this means that a JSON-encoded string is encoded again.
                   (k/insert db/input-event (k/values {:event-id input-event-id :content (json/write-str event) :date (clj-time/now)})))
                   (process-f -1 input-event-id event)
                 ;; If there's an exception we can't do anything about it.
                 (catch Exception e (error (str "Exception " e))))
-                (swap! state/num-tied-up-workers dec)
-              (swap! state/processed-count-buckets inc-bucket)))
-
+              (swap! state/processed-count-buckets inc-bucket)
     (reset! state/most-recent-input (clj-time/now))
 
     ; Increment the current count bucket.

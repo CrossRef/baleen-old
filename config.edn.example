@@ -18,5 +18,14 @@
  :instance-name "banana"
  :enabled-source :wikimedia-dois
  :source-config {:wikimedia-dois {:subscribe "en.wikipedia.org"}
-                 :wikimedia-restbase-dois {:subscribe "*" }
-                 :gnip-dois {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}}
+ 				 ; Suggested *.wikipedia.org or a specific wikipedia. Other mediawiki sites may not have all the RESTBase stuff set up and cause problems (slowdowns from retries etc).
+                 :wikimedia-restbase-dois {:subscribe "*.wikipedia.org" }
+                 :gnip-dois {:username "XYZ" :password "XYZ" :url "http://example.com" :charset "UTF-8"}}
+
+
+
+:lagotto {:push-endpoint "http://localhost:3030/api/deposits"
+		  ; token that identifies this source
+		  :source-token "abc123"
+		  ; authentication token
+		  :token "def999"}}
