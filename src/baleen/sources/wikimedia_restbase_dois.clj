@@ -5,7 +5,8 @@
   (:import [java.net URLEncoder]
             [java.util.logging Logger Level])
   (:require [clj-time.core :as clj-time])
-  (:require [clojure.data.json :as json])
+  (:require [clojure.data.json :as json]
+            [clojure.core.async :refer [chan dropping-buffer go-loop <! >!!]])
   (:require [baleen.database :as db]
             [baleen.server :as server]
             [baleen.state :as state]
@@ -23,13 +24,6 @@
   "Build a URL that can be retrieved from RESTBase"
   [server-name title revision]
   (str "https://" server-name "/api/rest_v1/page/html/" (URLEncoder/encode title) "/" revision))
-
-(defn build-canonical-url
-  "Build a canonical URL where the article can be accessed."
-  []
-
-
-  )
 
 (defn dois-from-body
   "Fetch the set of DOIs that are mentioned in the body text.
@@ -54,26 +48,11 @@
     [dois num-unlinked-dois]))
 
 
-(defn process
-  "Process a new input event by looking up old and new revisions."
-  ; Implemented using callbacks which are passed through http-kit. 
-  ; Previous implementation using futures that block on promises from http-kit pegged all CPUs at 100%. 
-  ; Previous implementation using channel and fixed number of workers that block on promises from http-kit don't scale to load (resource starvation).
+; Channel of {:old-revision :old-body :new-revision :new-body :title :server-name :action}
+(def process-buf (dropping-buffer 1000))
+(def process-channel (chan process-buf))
 
-  ; Chaining has the effect of retrieving the first revision first (which is more likely to exist in RESTBase) giving a bit more time before the new one is fetched.
-  [worker-id input-event-id data]
-  (let [server-name (get data "server_name")
-        server-url (get data "server_url")
-        title (get data "title")
-        old-revision (get-in data ["revision" "old"])
-        new-revision (get-in data ["revision" "new"])
-        date (clj-time/now)
-        event-type (get data "type")]
-    (http/get (build-restbase-url server-name title old-revision)
-      (fn [{old-status :status old-body :body}]
-        (http/get (build-restbase-url server-name title new-revision)
-          (fn [{new-status :status new-body :body}]
-             (when (and (= 200 old-status)) (= 200 new-status)
+(defn process-bodies [{old-revision :old-revision old-body :old-body new-revision :new-revision new-body :new-body title :title server-name :server-name action :action input-event-id :input-event-id date :date}]
               (let [[old-dois _] (dois-from-body old-body)
                     [new-dois num-unlinked-dois] (dois-from-body new-body)
                     added-dois (difference new-dois old-dois)
@@ -96,7 +75,49 @@
 
             (doseq [doi removed-dois]
               (let [event-key (json/write-str [old-revision new-revision doi title server-name "uncite"])]
-                (events/fire-citation input-event-id event-key doi date url "uncite" false)))))))))))
+                (events/fire-citation input-event-id event-key doi date url "uncite" false)))))
+
+(defn start-background-process []
+  (dotimes [_ 10]
+    (go-loop []
+         (let [data (<! process-channel)]
+          ;; TODO TRY CATCH?
+          (prn "Buf count" (count process-buf))
+           (process-bodies data))
+         (recur))))
+
+
+(defn process
+  "Process a new input event by looking up old and new revisions."
+  ; Implemented using callbacks which are passed through http-kit. 
+  ; Previous implementation using futures that block on promises from http-kit pegged all CPUs at 100%. 
+  ; Previous implementation using channel and fixed number of workers that block on promises from http-kit don't scale to load (resource starvation).
+
+  ; Chaining has the effect of retrieving the first revision first (which is more likely to exist in RESTBase) giving a bit more time before the new one is fetched.
+  [worker-id input-event-id data]
+  (let [server-name (get data "server_name")
+        server-url (get data "server_url")
+        title (get data "title")
+        old-revision (get-in data ["revision" "old"])
+        new-revision (get-in data ["revision" "new"])
+        date (clj-time/now)
+        event-type (get data "type")]
+      (when (= event-type "edit")
+        (http/get (build-restbase-url server-name title old-revision)
+          (fn [{old-status :status old-body :body}]
+            (http/get (build-restbase-url server-name title new-revision)
+              (fn [{new-status :status new-body :body}]
+                (when (and (= 200 old-status)) (= 200 new-status)
+                  (>!! process-channel {:old-revision old-revision :old-body old-body
+                                        :new-revision new-revision :new-body new-body
+                                        :title title
+                                        :server-name server-name
+                                        :input-event-id input-event-id
+                                        :date date})))))))))
+
+             
+
+
 
 ;From https://meta.wikimedia.org/wiki/List_of_Wikipedias#1.2B_articles
 (def server-names {
@@ -433,6 +454,7 @@
     ; The logger is mega-chatty (~50 messages per second at INFO). We have alternative ways of seeing what's going on.
     (info "Start wikimedia...")
     (.setLevel (Logger/getLogger "io.socket") Level/OFF)
+    (start-background-process)
     (info "Wikimedia running.")
     (try
       (reset! client (new-client))
