@@ -1,6 +1,7 @@
 (ns baleen.events
   (:require [baleen.database :as db]
-            [baleen.state :as state])
+            [baleen.state :as state]
+            [baleen.lagotto :as lagotto])
   (:require [crossref.util.config :refer [config]])
   (:require [korma.db :as kdb])
   (:require [korma.core :as k])
@@ -93,6 +94,12 @@
     ; If they aren't, it'll be because of high throughput so it won't matter if this is a few ms out of date anyway;
     (reset! state/most-recent-citation date)
     (swap! state/citation-count-buckets inc-bucket)
+
+    (when (:lagotto config)
+      (condp = action
+        "cite" (lagotto/send-triple url "references" doi event-key :add "Wikipedia")
+        "uncite" (lagotto/send-triple url "references" doi event-key :delete "Wikipedia")
+        :default))
 
     ; Broadcast to all websocket listeners.
     (let [exported (json/write-str ((:export-f @state/source) 0 event-key doi (str date) url action))]
