@@ -29,7 +29,9 @@
             url-path (.getPath url)
             ; Drop leading slash.
             url-path (when-not (string/blank? url-path) (subs url-path 1))
-            likely-doi (and (.contains host "doi.org")
+            likely-doi (and host
+                            url-path
+                            (.contains host "doi.org")
                             (.startsWith url-path "10."))]
         (when likely-doi url-path)))))
     
