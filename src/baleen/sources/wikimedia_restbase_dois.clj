@@ -86,6 +86,7 @@
            (process-bodies data))
          (recur))))
 
+(def in-flight (atom 0))
 
 (defn process
   "Process a new input event by looking up old and new revisions."
@@ -101,12 +102,17 @@
         old-revision (get-in data ["revision" "old"])
         new-revision (get-in data ["revision" "new"])
         date (clj-time/now)
+        start-time (clj-time/now)
         event-type (get data "type")]
       (when (= event-type "edit")
+        (swap! in-flight inc)
         (http/get (build-restbase-url server-name title old-revision)
           (fn [{old-status :status old-body :body}]
             (http/get (build-restbase-url server-name title new-revision)
               (fn [{new-status :status new-body :body}]
+                            (locking *out* (prn "TIME" (clj-time/in-millis (clj-time/interval start-time (clj-time/now))) "in flight" @in-flight "status" old-status new-status))
+            (swap! in-flight dec)
+
                 (when (and (= 200 old-status)) (= 200 new-status)
                   (>!! process-channel {:old-revision old-revision :old-body old-body
                                         :new-revision new-revision :new-body new-body
@@ -433,8 +439,8 @@
   (let [arg (first args)
         arg-str (.toString arg)
         data (json/read-str (.toString arg))]
-    ; Wait 1 minute.
-    (at-at/after (* 1000 60 1)
+    ; Wait 10 seconds.
+    (at-at/after (* 1000 10)
       #(events/fire-input data)
       state/at-at-pool)))
 
