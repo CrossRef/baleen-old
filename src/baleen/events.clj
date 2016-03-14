@@ -98,8 +98,8 @@
 
     (when (:lagotto config)
       (condp = action
-        "cite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :add "Wikipedia")
-        "uncite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :delete "Wikipedia")
+        "cite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :add "wikipedia")
+        "uncite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :delete "wikipedia")
         :default))
 
     ; Broadcast to all websocket listeners.

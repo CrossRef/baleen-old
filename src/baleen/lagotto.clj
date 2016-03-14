@@ -16,8 +16,8 @@
   (let [source-token (get-in config [:lagotto :source-token])
         auth-token (get-in config [:lagotto :auth-token])
         payload (condp = action
+          ; No message action when adding, only deleting.
           :add {:deposit {:uuid event-key
-                          :message_action "add"
                           :source_token source-token
                           :subj_id subject
                           :obj_id object
