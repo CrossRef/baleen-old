@@ -2,7 +2,8 @@
   (:require [baleen.database :as db]
             [baleen.state :as state]
             [baleen.lagotto :as lagotto])
-  (:require [crossref.util.config :refer [config]])
+  (:require [crossref.util.config :refer [config]]
+            [crossref.util.doi :as cr-doi])
   (:require [korma.db :as kdb])
   (:require [korma.core :as k])
   (:require [korma.db :refer [mysql with-db defdb]])
@@ -97,8 +98,8 @@
 
     (when (:lagotto config)
       (condp = action
-        "cite" (lagotto/send-triple url "references" doi event-key :add "Wikipedia")
-        "uncite" (lagotto/send-triple url "references" doi event-key :delete "Wikipedia")
+        "cite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :add "Wikipedia")
+        "uncite" (lagotto/send-triple url "references" (cr-doi/normalise-doi doi) event-key :delete "Wikipedia")
         :default))
 
     ; Broadcast to all websocket listeners.
